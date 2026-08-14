@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "Divine Sweets",
+    "slug": "divine-sweets-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icone.png",
+    "scheme": "divinesweets",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#ffffff",
+    "android": {
+      "package": "br.com.divinesweets.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#f6e5df",
+        "foregroundImage": "./assets/icone-adaptativo.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#f6e5df",
+          "image": "./assets/splash.png",
+          "imageWidth": 160
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O app usa suas fotos para você enviar uma imagem de referência do doce.",
+          "cameraPermission": "O app usa a câmera para você fotografar uma referência do doce."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d6516dcf-2367-435a-b008-6f74a3159ab5"
+      }
+    },
+    "owner": "hay8148"
+  }
+}
