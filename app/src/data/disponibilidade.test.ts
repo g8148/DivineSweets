@@ -1,4 +1,5 @@
-import { expect, test } from 'bun:test';
+import test from 'node:test';
+import assert from 'node:assert/strict';
 import {
   ANTECEDENCIA_MINIMA_HORAS,
   contarOcupacao,
@@ -12,41 +13,41 @@ const agenda: Agenda = { datasBloqueadas: ['2026-08-20'], limitePorDia: 3 };
 const semOcupacao: Record<string, number> = {};
 
 test('a antecedência mínima é de 48 horas', () => {
-  expect(ANTECEDENCIA_MINIMA_HORAS).toBe(48);
+  assert.strictEqual(ANTECEDENCIA_MINIMA_HORAS, 48);
 });
 
 test('data no passado é indisponível', () => {
-  expect(motivoIndisponivel('2026-08-12', agenda, semOcupacao, AGORA)).toBe('passado');
+  assert.strictEqual(motivoIndisponivel('2026-08-12', agenda, semOcupacao, AGORA), 'passado');
 });
 
 test('hoje e amanhã violam a antecedência de 48h', () => {
-  expect(motivoIndisponivel('2026-08-13', agenda, semOcupacao, AGORA)).toBe('antecedencia');
-  expect(motivoIndisponivel('2026-08-14', agenda, semOcupacao, AGORA)).toBe('antecedencia');
+  assert.strictEqual(motivoIndisponivel('2026-08-13', agenda, semOcupacao, AGORA), 'antecedencia');
+  assert.strictEqual(motivoIndisponivel('2026-08-14', agenda, semOcupacao, AGORA), 'antecedencia');
 });
 
 test('o terceiro dia já está liberado', () => {
-  expect(motivoIndisponivel('2026-08-15', agenda, semOcupacao, AGORA)).toBe(null);
+  assert.strictEqual(motivoIndisponivel('2026-08-15', agenda, semOcupacao, AGORA), null);
 });
 
 test('data bloqueada manualmente é indisponível mesmo com antecedência', () => {
-  expect(motivoIndisponivel('2026-08-20', agenda, semOcupacao, AGORA)).toBe('bloqueada');
+  assert.strictEqual(motivoIndisponivel('2026-08-20', agenda, semOcupacao, AGORA), 'bloqueada');
 });
 
 test('dia que atingiu o limite fica lotado', () => {
-  expect(motivoIndisponivel('2026-08-18', agenda, { '2026-08-18': 3 }, AGORA)).toBe('lotada');
+  assert.strictEqual(motivoIndisponivel('2026-08-18', agenda, { '2026-08-18': 3 }, AGORA), 'lotada');
 });
 
 test('dia abaixo do limite continua disponível', () => {
-  expect(motivoIndisponivel('2026-08-18', agenda, { '2026-08-18': 2 }, AGORA)).toBe(null);
+  assert.strictEqual(motivoIndisponivel('2026-08-18', agenda, { '2026-08-18': 2 }, AGORA), null);
 });
 
 test('bloqueio manual tem precedência sobre lotação', () => {
-  expect(motivoIndisponivel('2026-08-20', agenda, { '2026-08-20': 3 }, AGORA)).toBe('bloqueada');
+  assert.strictEqual(motivoIndisponivel('2026-08-20', agenda, { '2026-08-20': 3 }, AGORA), 'bloqueada');
 });
 
 test('dataDisponivel é o inverso de haver motivo', () => {
-  expect(dataDisponivel('2026-08-15', agenda, semOcupacao, AGORA)).toBe(true);
-  expect(dataDisponivel('2026-08-20', agenda, semOcupacao, AGORA)).toBe(false);
+  assert.strictEqual(dataDisponivel('2026-08-15', agenda, semOcupacao, AGORA), true);
+  assert.strictEqual(dataDisponivel('2026-08-20', agenda, semOcupacao, AGORA), false);
 });
 
 test('contarOcupacao agrupa por data e ignora recusados', () => {
@@ -56,5 +57,5 @@ test('contarOcupacao agrupa por data e ignora recusados', () => {
     { entrega: { data: '2026-08-18' }, status: 'recusado' },
     { entrega: { data: '2026-08-19' }, status: 'entregue' },
   ];
-  expect(contarOcupacao(pedidos)).toEqual({ '2026-08-18': 2, '2026-08-19': 1 });
+  assert.deepStrictEqual(contarOcupacao(pedidos), { '2026-08-18': 2, '2026-08-19': 1 });
 });
