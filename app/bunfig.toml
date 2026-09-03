@@ -1,2 +1,6 @@
+[install]
+# Espelha a raiz: o Metro exige node_modules plano (ver bunfig.toml da raiz).
+linker = "hoisted"
+
 [test]
 preload = ["./test-setup.ts"]

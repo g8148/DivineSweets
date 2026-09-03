@@ -1,0 +1,8 @@
+[install]
+# O Metro (Expo) espera o layout plano clássico de node_modules. O linker
+# "isolated", padrão do bun em workspaces, deixa as dependências transitivas
+# dentro de node_modules/.bun/, onde o resolver do Metro não chega.
+linker = "hoisted"
+
+[test]
+preload = ["./app/test-setup.ts"]

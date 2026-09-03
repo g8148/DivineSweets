@@ -1,0 +1,9 @@
+{
+  "name": "divine-sweets",
+  "private": true,
+  "workspaces": ["app", "api", "shared"],
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "bun run --filter '*' typecheck"
+  }
+}
