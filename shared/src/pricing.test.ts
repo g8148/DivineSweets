@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { calcularSubtotal, calcularTotal, TAXA_ENTREGA } from './pricing';
-import { buscarProduto } from './catalogo';
-import type { Personalizacao } from './tipos';
+import { calcularSubtotal, calcularTotal, TAXA_ENTREGA } from './pricing.ts';
+import { buscarProduto } from './catalogo.ts';
+import type { Personalizacao } from './tipos.ts';
 
 const bolo = buscarProduto('bolo-chocolate')!;
 

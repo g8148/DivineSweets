@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { criarPedidoSchema, dataISOSchema } from './schemas';
+import { criarPedidoSchema, dataISOSchema } from './schemas.ts';
 
 test('aceita data no formato YYYY-MM-DD', () => {
   assert.strictEqual(dataISOSchema.safeParse('2026-09-20').success, true);

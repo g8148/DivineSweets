@@ -1,4 +1,4 @@
-import type { Categoria, GrupoOpcao, Personalizacao, Produto } from './tipos';
+import type { Categoria, GrupoOpcao, Personalizacao, Produto } from './tipos.ts';
 
 export const categorias: { id: Categoria; nome: string }[] = [
   { id: 'cookies', nome: 'Cookies' },

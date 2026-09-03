@@ -1,4 +1,4 @@
-import type { Agenda } from './tipos';
+import type { Agenda } from './tipos.ts';
 
 export const ANTECEDENCIA_MINIMA_HORAS = 48;
 

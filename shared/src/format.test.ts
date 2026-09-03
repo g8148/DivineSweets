@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { formatarMoeda, formatarData, paraISO } from './format';
+import { formatarMoeda, formatarData, paraISO } from './format.ts';
 
 test('formata centavos como reais com vírgula decimal', () => {
   assert.strictEqual(formatarMoeda(6200), 'R$ 62,00');

@@ -1,12 +1,16 @@
 {
   "name": "divine-sweets",
   "private": true,
-  "workspaces": ["app", "api", "shared"],
+  "workspaces": [
+    "app",
+    "api",
+    "shared"
+  ],
   "engines": {
     "node": ">=24"
   },
   "scripts": {
-    "test": "node --import ./app/registrar-hooks.mjs --test",
+    "test": "node --import ./hooks/registrar.mjs --test",
     "typecheck": "npm run typecheck --workspaces --if-present"
   }
 }

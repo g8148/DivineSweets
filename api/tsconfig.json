@@ -6,12 +6,9 @@
     "moduleResolution": "bundler",
     "noEmit": true,
     "skipLibCheck": true,
-    "types": [
-      "node"
-    ],
-    "allowImportingTsExtensions": true
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": true,
+    "types": ["node"]
   },
-  "include": [
-    "src/**/*.ts"
-  ]
+  "include": ["src/**/*.ts", "tsup.config.ts"]
 }

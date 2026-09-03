@@ -1,5 +1,5 @@
-import { grupos } from './catalogo';
-import type { Personalizacao, Produto } from './tipos';
+import { grupos } from './catalogo.ts';
+import type { Personalizacao, Produto } from './tipos.ts';
 
 export const TAXA_ENTREGA = 1000;
 

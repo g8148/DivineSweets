@@ -8,7 +8,7 @@
     "android": "expo start --android",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
-    "test": "node --import ./registrar-hooks.mjs --test"
+    "test": "node --import ../hooks/registrar.mjs --test"
   },
   "dependencies": {
     "expo": "~57.0.12",

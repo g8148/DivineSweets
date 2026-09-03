@@ -10,7 +10,8 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const raizApp = path.dirname(fileURLToPath(import.meta.url));
+// Os hooks vivem na raiz do monorepo; o alias `@/` é do workspace do app.
+const raizApp = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'app');
 const EXTENSOES = ['', '.ts', '.tsx', '/index.ts', '/index.tsx'];
 
 function resolverAlias(especificador) {
