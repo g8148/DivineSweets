@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Botao } from '@/components/Botao';
 import { Texto } from '@/components/Texto';
-import { formatarMoeda } from '@/data/format';
+import { formatarMoeda } from '@divine/shared';
 import { cores, espaco } from '@/theme';
 
 type Props = {

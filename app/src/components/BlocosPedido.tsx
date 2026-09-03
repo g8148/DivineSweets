@@ -5,11 +5,12 @@ import { StyleSheet, View } from 'react-native';
 import { Cartao } from '@/components/Cartao';
 import { LinhaResumo } from '@/components/LinhaResumo';
 import { Texto } from '@/components/Texto';
-import { diaDaSemana, formatarData, formatarMoeda } from '@/data/format';
-import { descreverSelecoes } from '@/data/opcoes';
-import { TAXA_ENTREGA } from '@/data/pricing';
+import { diaDaSemana, formatarData, formatarMoeda } from '@divine/shared';
+import { descreverSelecoes } from '@divine/shared';
+import { TAXA_ENTREGA } from '@divine/shared';
 import { cores, espaco, raio } from '@/theme';
-import type { Pedido, Produto } from '@/types';
+import type { Pedido, Produto } from '@divine/shared';
+import { imagemDoProduto } from '@/data/imagens';
 
 export function BlocoProduto({
   produto,
@@ -28,7 +29,7 @@ export function BlocoProduto({
       <Texto peso="semibold">Produto</Texto>
 
       <View style={styles.produto}>
-        {produto ? <Image source={produto.imagem} style={styles.miniatura} contentFit="cover" /> : null}
+        {produto ? <Image source={imagemDoProduto(produto.id)} style={styles.miniatura} contentFit="cover" /> : null}
         <Texto peso="semibold" style={styles.nome}>
           {produto?.nome ?? 'Produto removido do catálogo'}
         </Texto>

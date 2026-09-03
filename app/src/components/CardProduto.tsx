@@ -2,9 +2,10 @@ import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 import { Cartao } from '@/components/Cartao';
 import { Texto } from '@/components/Texto';
-import { formatarMoeda } from '@/data/format';
+import { formatarMoeda } from '@divine/shared';
 import { cores, espaco } from '@/theme';
-import type { Produto } from '@/types';
+import type { Produto } from '@divine/shared';
+import { imagemDoProduto } from '@/data/imagens';
 
 type Props = {
   produto: Produto;
@@ -14,7 +15,7 @@ type Props = {
 export function CardProduto({ produto, onPress }: Props) {
   return (
     <Cartao onPress={onPress} style={styles.cartao}>
-      <Image source={produto.imagem} style={styles.foto} contentFit="cover" />
+      <Image source={imagemDoProduto(produto.id)} style={styles.foto} contentFit="cover" />
       <View style={styles.corpo}>
         <Texto peso="semibold" numberOfLines={2}>
           {produto.nome}

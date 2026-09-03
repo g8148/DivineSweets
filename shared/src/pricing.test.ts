@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { calcularSubtotal, calcularTotal, TAXA_ENTREGA } from '@/data/pricing';
-import { buscarProduto } from '@/data/produtos';
-import type { Personalizacao } from '@/types';
+import { calcularSubtotal, calcularTotal, TAXA_ENTREGA } from './pricing';
+import { buscarProduto } from './catalogo';
+import type { Personalizacao } from './tipos';
 
 const bolo = buscarProduto('bolo-chocolate')!;
 
@@ -18,7 +18,7 @@ function personalizacao(over: Partial<Personalizacao> = {}): Personalizacao {
 }
 
 test('sem seleções o subtotal é o preço-base', () => {
-  assert.strictEqual(calcularSubtotal(bolo, personalizacao()), 120);
+  assert.strictEqual(calcularSubtotal(bolo, personalizacao()), 12000);
 });
 
 test('soma os deltas das opções escolhidas', () => {
@@ -30,37 +30,37 @@ test('soma os deltas das opções escolhidas', () => {
       cobertura: 'cobertura-ganache',
     },
   });
-  assert.strictEqual(calcularSubtotal(bolo, p), 120 + 55 + 15 + 22 + 25);
+  assert.strictEqual(calcularSubtotal(bolo, p), 12000 + 5500 + 1500 + 2200 + 2500);
 });
 
 test('multiplica pela quantidade', () => {
   const p = personalizacao({ quantidade: 3, selecoes: { 'tamanho-bolo': 'bolo-2kg' } });
-  assert.strictEqual(calcularSubtotal(bolo, p), (120 + 105) * 3);
+  assert.strictEqual(calcularSubtotal(bolo, p), (12000 + 10500) * 3);
 });
 
 test('opção com delta zero não altera o preço', () => {
   const p = personalizacao({ selecoes: { cobertura: 'cobertura-nenhuma' } });
-  assert.strictEqual(calcularSubtotal(bolo, p), 120);
+  assert.strictEqual(calcularSubtotal(bolo, p), 12000);
 });
 
 test('seleção inválida é ignorada em vez de quebrar', () => {
   const p = personalizacao({ selecoes: { recheio: 'recheio-inexistente' } });
-  assert.strictEqual(calcularSubtotal(bolo, p), 120);
+  assert.strictEqual(calcularSubtotal(bolo, p), 12000);
 });
 
 test('grupo não pertencente ao produto é ignorado', () => {
   const cookie = buscarProduto('cookie-pistache')!;
   const p = personalizacao({ produtoId: 'cookie-pistache', selecoes: { cobertura: 'cobertura-pasta' } });
-  assert.strictEqual(calcularSubtotal(cookie, p), 62);
+  assert.strictEqual(calcularSubtotal(cookie, p), 6200);
 });
 
 test('entrega soma a taxa, retirada não', () => {
   const p = personalizacao();
-  assert.strictEqual(calcularTotal(bolo, p, 'entrega'), 120 + TAXA_ENTREGA);
-  assert.strictEqual(calcularTotal(bolo, p, 'retirada'), 120);
+  assert.strictEqual(calcularTotal(bolo, p, 'entrega'), 12000 + TAXA_ENTREGA);
+  assert.strictEqual(calcularTotal(bolo, p, 'retirada'), 12000);
 });
 
 test('a taxa de entrega é cobrada uma vez, não por unidade', () => {
   const p = personalizacao({ quantidade: 4 });
-  assert.strictEqual(calcularTotal(bolo, p, 'entrega'), 120 * 4 + TAXA_ENTREGA);
+  assert.strictEqual(calcularTotal(bolo, p, 'entrega'), 12000 * 4 + TAXA_ENTREGA);
 });

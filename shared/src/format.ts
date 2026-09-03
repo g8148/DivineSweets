@@ -1,5 +1,10 @@
-export function formatarMoeda(valor: number): string {
-  return `R$ ${valor.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
+/**
+ * Dinheiro trafega como inteiro em centavos, do banco à tela. A divisão por
+ * 100 acontece só aqui, na borda de exibição.
+ */
+export function formatarMoeda(centavos: number): string {
+  const reais = (centavos / 100).toFixed(2);
+  return `R$ ${reais.replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
 }
 
 export function formatarData(iso: string): string {

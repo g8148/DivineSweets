@@ -12,10 +12,10 @@ import { StatusStepper } from '@/components/StatusStepper';
 import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
 import { Phone } from '@/components/icones';
-import { numeroPedido } from '@/data/format';
+import { numeroPedido } from '@divine/shared';
 import { usePedidos } from '@/state/PedidosContext';
 import { cores, espaco, raio } from '@/theme';
-import type { StatusPedido } from '@/types';
+import type { StatusPedido } from '@divine/shared';
 
 const PROXIMO_PASSO: Partial<Record<StatusPedido, string>> = {
   recebido: 'Iniciar produção',

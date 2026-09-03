@@ -9,11 +9,12 @@ import { Campo } from '@/components/Campo';
 import { Cartao } from '@/components/Cartao';
 import { Chip } from '@/components/Chip';
 import { Texto } from '@/components/Texto';
-import { grupos } from '@/data/opcoes';
-import { categorias } from '@/data/produtos';
+import { grupos } from '@divine/shared';
+import { categorias } from '@divine/shared';
 import { usePedidos } from '@/state/PedidosContext';
 import { cores, espaco, raio } from '@/theme';
-import type { Categoria } from '@/types';
+import type { Categoria } from '@divine/shared';
+import { imagemDoProduto } from '@/data/imagens';
 
 // O bundler resolve `require` estaticamente, então um produto criado no protótipo
 // não tem como apontar para um arquivo novo. Ele herda esta imagem.
@@ -38,7 +39,8 @@ export default function FormularioProduto() {
 
   const [nome, setNome] = useState(existente?.nome ?? '');
   const [descricao, setDescricao] = useState(existente?.descricao ?? '');
-  const [preco, setPreco] = useState(existente ? String(existente.precoBase) : '');
+  // O campo é digitado em reais; o domínio guarda centavos.
+  const [preco, setPreco] = useState(existente ? (existente.precoBase / 100).toFixed(2).replace('.', ',') : '');
   const [categoria, setCategoria] = useState<Categoria>(existente?.categoria ?? 'cookies');
   const [gruposIds, setGruposIds] = useState<string[]>(existente?.gruposIds ?? []);
   const [permiteMensagem, setPermiteMensagem] = useState(existente?.permiteMensagem ?? false);
@@ -55,7 +57,7 @@ export default function FormularioProduto() {
   }
 
   function salvar() {
-    const precoNumero = Number(preco.replace(',', '.'));
+    const precoNumero = Math.round(Number(preco.replace(',', '.')) * 100);
 
     const problemaNome = nome.trim() ? '' : 'Informe o nome';
     const problemaPreco =
@@ -74,7 +76,6 @@ export default function FormularioProduto() {
       categoria,
       descricao: descricao.trim(),
       precoBase: precoNumero,
-      imagem: existente?.imagem ?? IMAGEM_PADRAO,
       gruposIds,
       permiteMensagem,
       permiteFoto,
@@ -89,7 +90,7 @@ export default function FormularioProduto() {
 
       <ScrollView contentContainerStyle={styles.conteudo}>
         <Cartao style={styles.cartao}>
-          <Image source={existente?.imagem ?? IMAGEM_PADRAO} style={styles.foto} contentFit="cover" />
+          <Image source={existente ? imagemDoProduto(existente.id) : IMAGEM_PADRAO} style={styles.foto} contentFit="cover" />
           <Texto variante="legenda" cor={cores.cinzaEscuro}>
             A troca de imagem não está disponível neste protótipo.
           </Texto>

@@ -1,5 +1,5 @@
-import { paraISO } from '@/data/format';
-import type { Pedido } from '@/types';
+import { paraISO } from '@divine/shared';
+import type { Pedido } from '@divine/shared';
 
 function daquiADias(dias: number): string {
   const d = new Date();
@@ -25,7 +25,7 @@ export const pedidosSeed: Pedido[] = [
       fotoUri: null,
     },
     entrega: { tipo: 'entrega', data: daquiADias(3), hora: '14:00', endereco: 'Rua das Flores, 220 — Centro' },
-    total: 332,
+    total: 33200,
     status: 'producao',
     criadoEm: new Date().toISOString(),
   },
@@ -41,7 +41,7 @@ export const pedidosSeed: Pedido[] = [
       fotoUri: null,
     },
     entrega: { tipo: 'retirada', data: daquiADias(4), hora: '09:30', endereco: '' },
-    total: 216,
+    total: 21600,
     status: 'recebido',
     criadoEm: new Date().toISOString(),
   },
@@ -57,7 +57,7 @@ export const pedidosSeed: Pedido[] = [
       fotoUri: null,
     },
     entrega: { tipo: 'entrega', data: daquiADias(2), hora: '17:00', endereco: 'Av. Nereu Ramos, 1150' },
-    total: 134,
+    total: 13400,
     status: 'pronto',
     criadoEm: new Date().toISOString(),
   },

@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Texto } from '@/components/Texto';
 import { ChevronLeft, ChevronRight } from '@/components/icones';
-import { paraISO } from '@/data/format';
-import type { MotivoIndisponivel } from '@/data/disponibilidade';
+import { paraISO } from '@divine/shared';
+import type { MotivoIndisponivel } from '@divine/shared';
 import { cores, espaco, raio } from '@/theme';
 
 export type Marcacao = 'bloqueada' | 'lotada' | null;

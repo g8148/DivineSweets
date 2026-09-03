@@ -5,8 +5,8 @@ import {
   contarOcupacao,
   dataDisponivel,
   motivoIndisponivel,
-} from '@/data/disponibilidade';
-import type { Agenda } from '@/data/agenda';
+} from './disponibilidade';
+import type { Agenda } from './tipos';
 
 const AGORA = new Date(2026, 7, 13, 10, 0, 0); // 13/08/2026 10:00
 const agenda: Agenda = { datasBloqueadas: ['2026-08-20'], limitePorDia: 3 };

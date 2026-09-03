@@ -19,7 +19,6 @@ export type Produto = {
   categoria: Categoria;
   descricao: string;
   precoBase: number;
-  imagem: number;
   gruposIds: string[];
   permiteMensagem: boolean;
   permiteFoto: boolean;
@@ -62,4 +61,9 @@ export type Usuario = {
   telefone: string;
   perfil: Perfil;
   enderecos: string[];
+};
+
+export type Agenda = {
+  datasBloqueadas: string[];
+  limitePorDia: number;
 };

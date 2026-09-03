@@ -6,11 +6,11 @@ import { CardPedido } from '@/components/CardPedido';
 import { Chip } from '@/components/Chip';
 import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
-import { diaDaSemana, formatarData } from '@/data/format';
+import { diaDaSemana, formatarData } from '@divine/shared';
 import { useAuth } from '@/state/AuthContext';
 import { usePedidos } from '@/state/PedidosContext';
 import { cores, espaco } from '@/theme';
-import type { Pedido, StatusPedido } from '@/types';
+import type { Pedido, StatusPedido } from '@divine/shared';
 
 const FILTROS: { id: StatusPedido | 'todos'; rotulo: string }[] = [
   { id: 'todos', rotulo: 'Todos' },

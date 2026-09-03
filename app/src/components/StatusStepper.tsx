@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import { Texto } from '@/components/Texto';
 import { ETAPAS, ORDEM_STATUS } from '@/data/status';
 import { cores, espaco } from '@/theme';
-import type { StatusPedido } from '@/types';
+import type { StatusPedido } from '@divine/shared';
 
 export function StatusStepper({ status }: { status: StatusPedido }) {
   if (status === 'recusado') {

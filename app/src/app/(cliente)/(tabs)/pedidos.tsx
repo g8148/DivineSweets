@@ -8,7 +8,7 @@ import { Vazio } from '@/components/Vazio';
 import { useAuth } from '@/state/AuthContext';
 import { usePedidos } from '@/state/PedidosContext';
 import { cores, espaco } from '@/theme';
-import type { Pedido } from '@/types';
+import type { Pedido } from '@divine/shared';
 
 const EM_ANDAMENTO: Pedido['status'][] = ['recebido', 'producao', 'pronto'];
 

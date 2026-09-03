@@ -1,7 +1,7 @@
-import { grupos } from '@/data/opcoes';
-import type { Personalizacao, Produto } from '@/types';
+import { grupos } from './catalogo';
+import type { Personalizacao, Produto } from './tipos';
 
-export const TAXA_ENTREGA = 10;
+export const TAXA_ENTREGA = 1000;
 
 export function calcularSubtotal(produto: Produto, personalizacao: Personalizacao): number {
   const deltas = produto.gruposIds.reduce((soma, grupoId) => {

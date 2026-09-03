@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Texto } from '@/components/Texto';
-import { formatarMoeda } from '@/data/format';
+import { formatarMoeda } from '@divine/shared';
 import { cores, espaco, raio } from '@/theme';
-import type { Opcao } from '@/types';
+import type { Opcao } from '@divine/shared';
 
 type Props = {
   opcoes: Opcao[];

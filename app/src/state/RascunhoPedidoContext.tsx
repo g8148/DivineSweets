@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
-import type { Entrega, Personalizacao } from '@/types';
+import type { Entrega, Personalizacao } from '@divine/shared';
 
 const ENTREGA_INICIAL: Entrega = { tipo: 'retirada', data: '', hora: '', endereco: '' };
 

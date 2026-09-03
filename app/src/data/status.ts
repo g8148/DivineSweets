@@ -1,4 +1,4 @@
-import type { StatusPedido } from '@/types';
+import type { StatusPedido } from '@divine/shared';
 
 export const ORDEM_STATUS: StatusPedido[] = ['recebido', 'producao', 'pronto', 'entregue'];
 

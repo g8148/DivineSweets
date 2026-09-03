@@ -1,10 +1,10 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { agendaInicial, type Agenda } from '@/data/agenda';
-import { contarOcupacao } from '@/data/disponibilidade';
+import { contarOcupacao } from '@divine/shared';
 import { pedidosSeed } from '@/data/pedidosSeed';
-import { produtos as produtosIniciais } from '@/data/produtos';
+import { catalogo as produtosIniciais } from '@divine/shared';
 import { ORDEM_STATUS } from '@/data/status';
-import type { Pedido, Produto } from '@/types';
+import type { Pedido, Produto } from '@divine/shared';
 
 type NovoPedido = Omit<Pedido, 'id' | 'criadoEm' | 'status'>;
 

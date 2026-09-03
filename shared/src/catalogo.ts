@@ -1,4 +1,4 @@
-import type { Categoria, Produto } from '@/types';
+import type { Categoria, GrupoOpcao, Personalizacao, Produto } from './tipos';
 
 export const categorias: { id: Categoria; nome: string }[] = [
   { id: 'cookies', nome: 'Cookies' },
@@ -7,14 +7,13 @@ export const categorias: { id: Categoria; nome: string }[] = [
   { id: 'sazonais', nome: 'Presentes & Sazonais' },
 ];
 
-export const produtos: Produto[] = [
+export const catalogo: Produto[] = [
   {
     id: 'cookie-pistache',
     nome: 'Cookie de Pistache',
     categoria: 'cookies',
     descricao: 'Cookie recheado com creme de pistache, casquinha crocante e centro macio.',
-    precoBase: 62,
-    imagem: require('@/assets/produtos/cookie-pistache.jpg'),
+    precoBase: 6200,
     gruposIds: ['tamanho-caixa'],
     permiteMensagem: false,
     permiteFoto: false,
@@ -24,8 +23,7 @@ export const produtos: Produto[] = [
     nome: 'Cookie Choco-Menta',
     categoria: 'cookies',
     descricao: 'Massa de chocolate belga com gotas de menta refrescante.',
-    precoBase: 54,
-    imagem: require('@/assets/produtos/cookie-chocomenta.jpg'),
+    precoBase: 5400,
     gruposIds: ['tamanho-caixa'],
     permiteMensagem: false,
     permiteFoto: false,
@@ -35,8 +33,7 @@ export const produtos: Produto[] = [
     nome: 'Cookie Limão com Morango',
     categoria: 'cookies',
     descricao: 'Massa cítrica de limão siciliano recheada com geleia artesanal de morango.',
-    precoBase: 56,
-    imagem: require('@/assets/produtos/cookie-limao-morango.jpg'),
+    precoBase: 5600,
     gruposIds: ['tamanho-caixa'],
     permiteMensagem: false,
     permiteFoto: false,
@@ -46,8 +43,7 @@ export const produtos: Produto[] = [
     nome: 'Cookie Chocolate com Laranja',
     categoria: 'cookies',
     descricao: 'Chocolate meio amargo com raspas de laranja confitada.',
-    precoBase: 56,
-    imagem: require('@/assets/produtos/cookie-choco-laranja.jpg'),
+    precoBase: 5600,
     gruposIds: ['tamanho-caixa'],
     permiteMensagem: false,
     permiteFoto: false,
@@ -57,8 +53,7 @@ export const produtos: Produto[] = [
     nome: 'Cookie Brigadeiro com Bacon',
     categoria: 'cookies',
     descricao: 'O clássico da casa: brigadeiro cremoso com lascas crocantes de bacon.',
-    precoBase: 60,
-    imagem: require('@/assets/produtos/cookie-brigadeiro-bacon.jpg'),
+    precoBase: 6000,
     gruposIds: ['tamanho-caixa'],
     permiteMensagem: false,
     permiteFoto: false,
@@ -68,8 +63,7 @@ export const produtos: Produto[] = [
     nome: 'Cookie de Amendoim',
     categoria: 'cookies',
     descricao: 'Pasta de amendoim caseira e amendoim torrado em pedaços.',
-    precoBase: 52,
-    imagem: require('@/assets/produtos/cookie-amendoim-1.jpeg'),
+    precoBase: 5200,
     gruposIds: ['tamanho-caixa'],
     permiteMensagem: false,
     permiteFoto: false,
@@ -79,8 +73,7 @@ export const produtos: Produto[] = [
     nome: 'Cookie Sonho de Valsa',
     categoria: 'cookies',
     descricao: 'Recheio cremoso de Sonho de Valsa com pedaços do bombom na massa.',
-    precoBase: 58,
-    imagem: require('@/assets/produtos/cookies-sonho-de-valsa.jpg'),
+    precoBase: 5800,
     gruposIds: ['tamanho-caixa'],
     permiteMensagem: false,
     permiteFoto: false,
@@ -90,8 +83,7 @@ export const produtos: Produto[] = [
     nome: 'Bolo de Chocolate Tradicional',
     categoria: 'bolos',
     descricao: 'Massa de chocolate fofinha, recheio à sua escolha e acabamento clássico.',
-    precoBase: 120,
-    imagem: require('@/assets/produtos/chocolate-tradicional.jpg'),
+    precoBase: 12000,
     gruposIds: ['tamanho-bolo', 'sabor-massa', 'recheio', 'cobertura'],
     permiteMensagem: true,
     permiteFoto: false,
@@ -101,8 +93,7 @@ export const produtos: Produto[] = [
     nome: 'Bolo Decorado',
     categoria: 'bolos',
     descricao: 'Bolo temático feito sob medida para a sua festa. Envie uma foto de referência.',
-    precoBase: 185,
-    imagem: require('@/assets/produtos/decorado.jpg'),
+    precoBase: 18500,
     gruposIds: ['tamanho-bolo', 'sabor-massa', 'recheio', 'cobertura'],
     permiteMensagem: true,
     permiteFoto: true,
@@ -112,8 +103,7 @@ export const produtos: Produto[] = [
     nome: 'Brownie Tradicional',
     categoria: 'brownies',
     descricao: 'Brownie denso de chocolate 70%, casquinha craquelada e centro úmido.',
-    precoBase: 45,
-    imagem: require('@/assets/produtos/brownie.jpg'),
+    precoBase: 4500,
     gruposIds: ['tamanho-caixa'],
     permiteMensagem: false,
     permiteFoto: false,
@@ -123,8 +113,7 @@ export const produtos: Produto[] = [
     nome: 'Buquê de Doces',
     categoria: 'sazonais',
     descricao: 'Arranjo de doces finos montado como buquê. Acompanha cartão personalizado.',
-    precoBase: 89,
-    imagem: require('@/assets/produtos/buquet.jpeg'),
+    precoBase: 8900,
     gruposIds: ['tamanho-buque'],
     permiteMensagem: true,
     permiteFoto: false,
@@ -134,8 +123,7 @@ export const produtos: Produto[] = [
     nome: 'Ovo de Páscoa Recheado',
     categoria: 'sazonais',
     descricao: 'Ovo de colher com casca de chocolate nobre e recheio à sua escolha.',
-    precoBase: 75,
-    imagem: require('@/assets/produtos/ovo-pascoa.jpg'),
+    precoBase: 7500,
     gruposIds: ['tamanho-ovo', 'recheio'],
     permiteMensagem: true,
     permiteFoto: false,
@@ -145,8 +133,7 @@ export const produtos: Produto[] = [
     nome: 'Panetone Artesanal',
     categoria: 'sazonais',
     descricao: 'Panetone de fermentação natural, recheado com brigadeiro ou doce de leite.',
-    precoBase: 68,
-    imagem: require('@/assets/produtos/natal-normal.jpg'),
+    precoBase: 6800,
     gruposIds: ['recheio'],
     permiteMensagem: false,
     permiteFoto: false,
@@ -156,14 +143,115 @@ export const produtos: Produto[] = [
     nome: 'Biscoito de Natal Pintado',
     categoria: 'sazonais',
     descricao: 'Biscoitos amanteigados decorados à mão com glacê real.',
-    precoBase: 58,
-    imagem: require('@/assets/produtos/natal-pintado.jpg'),
+    precoBase: 5800,
     gruposIds: ['tamanho-caixa'],
     permiteMensagem: false,
     permiteFoto: true,
   },
 ];
 
+export const grupos: Record<string, GrupoOpcao> = {
+  'tamanho-caixa': {
+    id: 'tamanho-caixa',
+    titulo: 'Tamanho da caixa',
+    obrigatorio: true,
+    opcoes: [
+      { id: 'caixa-6', nome: 'Caixa com 6', delta: 0 },
+      { id: 'caixa-12', nome: 'Caixa com 12', delta: 4800 },
+      { id: 'caixa-24', nome: 'Caixa com 24', delta: 9000 },
+    ],
+  },
+  'tamanho-bolo': {
+    id: 'tamanho-bolo',
+    titulo: 'Tamanho',
+    obrigatorio: true,
+    opcoes: [
+      { id: 'bolo-1kg', nome: '1 kg — 15 fatias', delta: 0 },
+      { id: 'bolo-1-5kg', nome: '1,5 kg — 25 fatias', delta: 5500 },
+      { id: 'bolo-2kg', nome: '2 kg — 35 fatias', delta: 10500 },
+    ],
+  },
+  'tamanho-buque': {
+    id: 'tamanho-buque',
+    titulo: 'Tamanho do buquê',
+    obrigatorio: true,
+    opcoes: [
+      { id: 'buque-p', nome: 'Pequeno — 9 doces', delta: 0 },
+      { id: 'buque-m', nome: 'Médio — 15 doces', delta: 3500 },
+      { id: 'buque-g', nome: 'Grande — 24 doces', delta: 7000 },
+    ],
+  },
+  'tamanho-ovo': {
+    id: 'tamanho-ovo',
+    titulo: 'Peso',
+    obrigatorio: true,
+    opcoes: [
+      { id: 'ovo-350', nome: '350 g', delta: 0 },
+      { id: 'ovo-500', nome: '500 g', delta: 3800 },
+      { id: 'ovo-750', nome: '750 g', delta: 8500 },
+    ],
+  },
+  'sabor-massa': {
+    id: 'sabor-massa',
+    titulo: 'Sabor da massa',
+    obrigatorio: true,
+    opcoes: [
+      { id: 'massa-chocolate', nome: 'Chocolate', delta: 0 },
+      { id: 'massa-baunilha', nome: 'Baunilha', delta: 0 },
+      { id: 'massa-cenoura', nome: 'Cenoura', delta: 0 },
+      { id: 'massa-red-velvet', nome: 'Red velvet', delta: 1500 },
+    ],
+  },
+  recheio: {
+    id: 'recheio',
+    titulo: 'Recheio',
+    obrigatorio: true,
+    opcoes: [
+      { id: 'recheio-brigadeiro', nome: 'Brigadeiro', delta: 0 },
+      { id: 'recheio-doce-leite', nome: 'Doce de leite', delta: 800 },
+      { id: 'recheio-maracuja', nome: 'Mousse de maracujá', delta: 1200 },
+      { id: 'recheio-ninho-nutella', nome: 'Ninho com Nutella', delta: 2200 },
+    ],
+  },
+  cobertura: {
+    id: 'cobertura',
+    titulo: 'Cobertura',
+    obrigatorio: false,
+    opcoes: [
+      { id: 'cobertura-nenhuma', nome: 'Sem cobertura', delta: 0 },
+      { id: 'cobertura-chantilly', nome: 'Chantilly', delta: 1500 },
+      { id: 'cobertura-ganache', nome: 'Ganache', delta: 2500 },
+      { id: 'cobertura-pasta', nome: 'Pasta americana', delta: 4500 },
+    ],
+  },
+};
+
+/**
+ * Traduz as seleções (que guardam ids) para pares legíveis, na ordem em que os
+ * grupos aparecem no produto. Usado por todas as telas de resumo.
+ */
+export function descreverSelecoes(
+  produto: Produto,
+  personalizacao: Personalizacao,
+): { rotulo: string; valor: string }[] {
+  return produto.gruposIds.flatMap((grupoId) => {
+    const grupo = grupos[grupoId];
+    const opcaoId = personalizacao.selecoes[grupoId];
+    if (!grupo || !opcaoId) return [];
+    const opcao = grupo.opcoes.find((o) => o.id === opcaoId);
+    if (!opcao) return [];
+    return [{ rotulo: grupo.titulo, valor: opcao.nome }];
+  });
+}
+
+export function gruposDoProduto(produto: Produto): GrupoOpcao[] {
+  return produto.gruposIds.map((id) => {
+    const grupo = grupos[id];
+    if (!grupo) throw new Error(`Grupo de opção desconhecido: ${id}`);
+    return grupo;
+  });
+}
+
 export function buscarProduto(id: string): Produto | undefined {
-  return produtos.find((p) => p.id === id);
+  return catalogo.find((p) => p.id === id);
 }

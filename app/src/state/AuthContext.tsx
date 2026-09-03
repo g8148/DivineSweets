@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
-import type { Perfil, Usuario } from '@/types';
+import type { Perfil, Usuario } from '@divine/shared';
 
 type DadosCadastro = { nome: string; email: string; telefone: string };
 

@@ -2,10 +2,11 @@ import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 import { Cartao } from '@/components/Cartao';
 import { Texto } from '@/components/Texto';
-import { formatarData, formatarMoeda } from '@/data/format';
-import { buscarProduto } from '@/data/produtos';
+import { formatarData, formatarMoeda } from '@divine/shared';
+import { buscarProduto } from '@divine/shared';
 import { cores, espaco, raio } from '@/theme';
-import type { Pedido, StatusPedido } from '@/types';
+import type { Pedido, StatusPedido } from '@divine/shared';
+import { imagemDoProduto } from '@/data/imagens';
 
 export const CORES_STATUS: Record<StatusPedido, { fundo: string; texto: string; rotulo: string }> = {
   recebido: { fundo: cores.rosaCreme, texto: cores.vinho, rotulo: 'Recebido' },
@@ -28,7 +29,7 @@ export function CardPedido({ pedido, onPress, mostrarCliente = false }: Props) {
 
   return (
     <Cartao onPress={onPress} style={styles.cartao}>
-      {produto ? <Image source={produto.imagem} style={styles.miniatura} contentFit="cover" /> : null}
+      {produto ? <Image source={imagemDoProduto(produto.id)} style={styles.miniatura} contentFit="cover" /> : null}
 
       <View style={styles.centro}>
         <Texto peso="semibold" numberOfLines={1}>

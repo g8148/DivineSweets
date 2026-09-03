@@ -1,9 +1,8 @@
-import { paraISO } from '@/data/format';
+import { paraISO } from '@divine/shared';
+import type { Agenda } from '@divine/shared';
 
-export type Agenda = {
-  datasBloqueadas: string[];
-  limitePorDia: number;
-};
+export type { Agenda };
+
 
 function daquiADias(dias: number): string {
   const d = new Date();

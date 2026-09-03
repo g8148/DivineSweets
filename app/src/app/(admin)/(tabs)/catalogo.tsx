@@ -6,11 +6,12 @@ import { Cartao } from '@/components/Cartao';
 import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
 import { CirclePlus, SquarePen, Trash2 } from '@/components/icones';
-import { formatarMoeda } from '@/data/format';
-import { categorias } from '@/data/produtos';
+import { formatarMoeda } from '@divine/shared';
+import { categorias } from '@divine/shared';
 import { usePedidos } from '@/state/PedidosContext';
 import { cores, espaco, raio } from '@/theme';
-import type { Produto } from '@/types';
+import type { Produto } from '@divine/shared';
+import { imagemDoProduto } from '@/data/imagens';
 
 export default function CatalogoAdmin() {
   const { produtosAdmin, removerProduto } = usePedidos();
@@ -41,7 +42,7 @@ export default function CatalogoAdmin() {
         ListEmptyComponent={<Vazio mensagem="Nenhum produto no catálogo." />}
         renderItem={({ item }) => (
           <Cartao style={styles.linha}>
-            <Image source={item.imagem} style={styles.miniatura} contentFit="cover" />
+            <Image source={imagemDoProduto(item.id)} style={styles.miniatura} contentFit="cover" />
 
             <View style={styles.dados}>
               <Texto peso="semibold" numberOfLines={1}>

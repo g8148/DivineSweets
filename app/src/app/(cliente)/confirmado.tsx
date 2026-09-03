@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { Botao } from '@/components/Botao';
-import { numeroPedido } from '@/data/format';
+import { numeroPedido } from '@divine/shared';
 import { Texto } from '@/components/Texto';
 import { CircleCheck } from '@/components/icones';
 import { cores, espaco } from '@/theme';

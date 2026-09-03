@@ -26,11 +26,32 @@ function resolverAlias(especificador) {
   return null;
 }
 
+// O Metro e o TypeScript aceitam import relativo sem extensão; o Node ESM não.
+function resolverSemExtensao(especificador, contexto) {
+  if (!especificador.startsWith('.') || !contexto.parentURL) return null;
+
+  const base = path.dirname(fileURLToPath(contexto.parentURL));
+  const bruto = path.resolve(base, especificador);
+
+  for (const extensao of EXTENSOES.slice(1)) {
+    const tentativa = bruto + extensao;
+    if (existsSync(tentativa)) return pathToFileURL(tentativa).href;
+  }
+  return null;
+}
+
 export async function resolve(especificador, contexto, proximo) {
   if (especificador.startsWith('@/')) {
     const url = resolverAlias(especificador);
-    if (url) return { url, format: /\.(jpe?g|png)$/i.test(url) ? 'commonjs' : undefined, shortCircuit: true };
+    if (url) {
+      const ehImagem = /\.(jpe?g|png)$/i.test(url);
+      return { url, format: ehImagem ? 'commonjs' : undefined, shortCircuit: true };
+    }
   }
+
+  const semExtensao = resolverSemExtensao(especificador, contexto);
+  if (semExtensao) return { url: semExtensao, shortCircuit: true };
+
   return proximo(especificador, contexto);
 }
 

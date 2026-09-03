@@ -11,13 +11,14 @@ import { LinhaResumo } from '@/components/LinhaResumo';
 import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
 import { Copy } from '@/components/icones';
-import { diaDaSemana, formatarData, formatarMoeda } from '@/data/format';
-import { descreverSelecoes } from '@/data/opcoes';
-import { calcularSubtotal, calcularTotal, TAXA_ENTREGA } from '@/data/pricing';
+import { diaDaSemana, formatarData, formatarMoeda } from '@divine/shared';
+import { descreverSelecoes } from '@divine/shared';
+import { calcularSubtotal, calcularTotal, TAXA_ENTREGA } from '@divine/shared';
 import { useAuth } from '@/state/AuthContext';
 import { usePedidos } from '@/state/PedidosContext';
 import { useRascunho } from '@/state/RascunhoPedidoContext';
 import { cores, espaco, raio } from '@/theme';
+import { imagemDoProduto } from '@/data/imagens';
 
 const CODIGO_PIX =
   '00020126580014BR.GOV.BCB.PIX0136divine-sweets-doceria5204000053039865802BR';
@@ -86,7 +87,7 @@ export default function Resumo() {
         <Cartao style={styles.cartao}>
           <Texto peso="semibold">Produto</Texto>
           <View style={styles.produto}>
-            <Image source={produto.imagem} style={styles.miniatura} contentFit="cover" />
+            <Image source={imagemDoProduto(produto.id)} style={styles.miniatura} contentFit="cover" />
             <Texto peso="semibold" style={styles.nomeProduto}>
               {produto.nome}
             </Texto>

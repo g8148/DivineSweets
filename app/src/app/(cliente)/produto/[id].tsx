@@ -6,11 +6,12 @@ import { Botao } from '@/components/Botao';
 import { Cabecalho } from '@/components/Cabecalho';
 import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
-import { formatarMoeda } from '@/data/format';
-import { categorias } from '@/data/produtos';
+import { formatarMoeda } from '@divine/shared';
+import { categorias } from '@divine/shared';
 import { usePedidos } from '@/state/PedidosContext';
 import { useRascunho } from '@/state/RascunhoPedidoContext';
 import { cores, espaco } from '@/theme';
+import { imagemDoProduto } from '@/data/imagens';
 
 export default function DetalheProduto() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -42,7 +43,7 @@ export default function DetalheProduto() {
       <Cabecalho titulo={produto.nome} comVoltar />
 
       <ScrollView contentContainerStyle={styles.conteudo}>
-        <Image source={produto.imagem} style={styles.foto} contentFit="cover" />
+        <Image source={imagemDoProduto(produto.id)} style={styles.foto} contentFit="cover" />
 
         <View style={styles.corpo}>
           <Texto variante="titulo" peso="bold">

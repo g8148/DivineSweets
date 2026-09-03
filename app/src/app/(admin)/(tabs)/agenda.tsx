@@ -4,7 +4,7 @@ import { Calendario, type Marcacao } from '@/components/Calendario';
 import { Cartao } from '@/components/Cartao';
 import { SeletorQuantidade } from '@/components/SeletorQuantidade';
 import { Texto } from '@/components/Texto';
-import { formatarData, paraISO } from '@/data/format';
+import { formatarData, paraISO } from '@divine/shared';
 import { usePedidos } from '@/state/PedidosContext';
 import { cores, espaco } from '@/theme';
 

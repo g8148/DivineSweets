@@ -6,7 +6,7 @@ import { CardProduto } from '@/components/CardProduto';
 import { Chip } from '@/components/Chip';
 import { Vazio } from '@/components/Vazio';
 import { Search } from '@/components/icones';
-import { categorias } from '@/data/produtos';
+import { categorias } from '@divine/shared';
 import { usePedidos } from '@/state/PedidosContext';
 import { cores, espaco, fonte, raio, tamanhoFonte } from '@/theme';
 
