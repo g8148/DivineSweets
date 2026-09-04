@@ -1,4 +1,5 @@
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
+import type { StatusPedido } from '@divine/shared';
 import { db } from '../db/client.ts';
 import { pedidoSelecoes, pedidos, user } from '../db/schema.ts';
 
@@ -30,26 +31,49 @@ export function montarPedido(
   };
 }
 
-async function completar(linha: LinhaPedido) {
-  const [selecoes, [cliente]] = await Promise.all([
+/**
+ * Completa uma lista inteira em três consultas, e não em duas por pedido. A
+ * listagem administrativa cresce sem limite: buscar seleções e cliente pedido a
+ * pedido faria o número de idas ao banco acompanhar o tamanho da lista.
+ */
+async function completar(linhas: LinhaPedido[]) {
+  if (linhas.length === 0) return [];
+
+  const ids = linhas.map((l) => l.id);
+  const donos = [...new Set(linhas.map((l) => l.usuarioId))];
+
+  const [selecoes, clientes] = await Promise.all([
     db
       .select({
+        pedidoId: pedidoSelecoes.pedidoId,
         grupoTitulo: pedidoSelecoes.grupoTitulo,
         opcaoNome: pedidoSelecoes.opcaoNome,
         delta: pedidoSelecoes.delta,
       })
       .from(pedidoSelecoes)
-      .where(eq(pedidoSelecoes.pedidoId, linha.id))
+      .where(inArray(pedidoSelecoes.pedidoId, ids))
       .orderBy(asc(pedidoSelecoes.ordem)),
     db
-      .select({ nome: user.name, telefone: user.telefone })
+      .select({ id: user.id, nome: user.name, telefone: user.telefone })
       .from(user)
-      .where(eq(user.id, linha.usuarioId)),
+      .where(inArray(user.id, donos)),
   ]);
 
-  return montarPedido(linha, selecoes, {
-    nome: cliente?.nome ?? '',
-    telefone: cliente?.telefone ?? '',
+  const porPedido = new Map<string, Selecao[]>();
+  for (const { pedidoId, ...selecao } of selecoes) {
+    const lista = porPedido.get(pedidoId);
+    if (lista) lista.push(selecao);
+    else porPedido.set(pedidoId, [selecao]);
+  }
+
+  const porCliente = new Map(clientes.map((c) => [c.id, c]));
+
+  return linhas.map((linha) => {
+    const cliente = porCliente.get(linha.usuarioId);
+    return montarPedido(linha, porPedido.get(linha.id) ?? [], {
+      nome: cliente?.nome ?? '',
+      telefone: cliente?.telefone ?? '',
+    });
   });
 }
 
@@ -62,7 +86,19 @@ export async function listarPedidosDoUsuario(usuarioId: string) {
     .where(eq(pedidos.usuarioId, usuarioId))
     .orderBy(desc(pedidos.criadoEm));
 
-  return Promise.all(linhas.map(completar));
+  return completar(linhas);
+}
+
+/** Todos os pedidos, para a administração. O filtro por status é o que separa
+ *  "o que preciso produzir hoje" do histórico inteiro. */
+export async function listarTodosPedidos(status?: StatusPedido) {
+  const linhas = await db
+    .select()
+    .from(pedidos)
+    .where(status ? eq(pedidos.status, status) : undefined)
+    .orderBy(desc(pedidos.criadoEm));
+
+  return completar(linhas);
 }
 
 /**
@@ -78,5 +114,7 @@ export async function buscarPedido(id: string, usuarioId?: string) {
     .from(pedidos)
     .where(and(eq(pedidos.id, id), dono));
 
-  return linha ? completar(linha) : null;
+  if (!linha) return null;
+  const [pedido] = await completar([linha]);
+  return pedido;
 }
