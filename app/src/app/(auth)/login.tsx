@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet } from 'react-native';
+import { useAuth } from '@/auth/useAuth';
 import { Botao } from '@/components/Botao';
 import { Campo } from '@/components/Campo';
 import { Texto } from '@/components/Texto';
-import { useAuth } from '@/state/AuthContext';
 import { cores, espaco } from '@/theme';
 
 export default function Login() {
@@ -13,11 +13,12 @@ export default function Login() {
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [souConfeiteira, setSouConfeiteira] = useState(false);
   const [erroEmail, setErroEmail] = useState('');
   const [erroSenha, setErroSenha] = useState('');
+  const [aviso, setAviso] = useState('');
+  const [enviando, setEnviando] = useState(false);
 
-  function aoEntrar() {
+  async function aoEntrar() {
     const emailLimpo = email.trim();
     const problemaEmail = !emailLimpo
       ? 'Informe seu e-mail'
@@ -28,11 +29,21 @@ export default function Login() {
 
     setErroEmail(problemaEmail);
     setErroSenha(problemaSenha);
+    setAviso('');
     if (problemaEmail || problemaSenha) return;
 
-    const perfil = souConfeiteira ? 'admin' : 'cliente';
-    entrar(emailLimpo, senha, perfil);
-    router.replace(perfil === 'admin' ? '/(admin)/(tabs)/pedidos' : '/(cliente)/(tabs)/catalogo');
+    setEnviando(true);
+    try {
+      await entrar(emailLimpo, senha);
+      // Sem destino fixo: quem decide é o papel que o servidor devolveu, e a
+      // tela inicial já sabe ler a sessão. O seletor "sou confeiteira" saiu
+      // daqui — dizer-se admin no login nunca deu acesso a nada.
+      router.replace('/');
+    } catch (erro) {
+      setAviso(erro instanceof Error ? erro.message : 'Não foi possível entrar');
+    } finally {
+      setEnviando(false);
+    }
   }
 
   return (
@@ -56,17 +67,18 @@ export default function Login() {
       />
       <Campo rotulo="Senha" valor={senha} aoMudar={setSenha} erro={erroSenha} placeholder="••••••" segura />
 
-      <View style={styles.linhaSwitch}>
-        <Switch
-          value={souConfeiteira}
-          onValueChange={setSouConfeiteira}
-          trackColor={{ false: cores.borda, true: cores.vinhoClaro }}
-          thumbColor={cores.vinho}
-        />
-        <Texto>Sou confeiteira</Texto>
-      </View>
+      {aviso ? (
+        <Texto variante="legenda" cor={cores.alertaTexto} style={styles.aviso}>
+          {aviso}
+        </Texto>
+      ) : null}
 
-      <Botao titulo="Entrar" onPress={aoEntrar} style={styles.botao} />
+      <Botao
+        titulo={enviando ? 'Entrando…' : 'Entrar'}
+        onPress={aoEntrar}
+        desabilitado={enviando}
+        style={styles.botao}
+      />
 
       <Pressable onPress={() => router.push('/(auth)/cadastro')} style={styles.link}>
         <Texto variante="legenda" cor={cores.vinhoClaro}>
@@ -83,7 +95,7 @@ const styles = StyleSheet.create({
   logo: { width: 96, height: 96, borderRadius: 48, alignSelf: 'center' },
   titulo: { textAlign: 'center', marginTop: espaco.md },
   subtitulo: { textAlign: 'center', marginBottom: espaco.xl },
-  linhaSwitch: { flexDirection: 'row', alignItems: 'center', gap: espaco.sm, marginBottom: espaco.lg },
+  aviso: { marginBottom: espaco.md },
   botao: { marginBottom: espaco.md },
   link: { alignItems: 'center', paddingVertical: espaco.sm },
 });

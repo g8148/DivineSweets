@@ -1,27 +1,25 @@
-import { useEffect } from 'react';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { Redirect } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
+import { useAuth } from '@/auth/useAuth';
 import { Texto } from '@/components/Texto';
-import { useAuth } from '@/state/AuthContext';
 import { cores, espaco } from '@/theme';
 
 export default function Splash() {
-  const { usuario } = useAuth();
+  const { usuario, carregando } = useAuth();
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!usuario) {
-        router.replace('/(auth)/login');
-      } else if (usuario.perfil === 'admin') {
-        router.replace('/(admin)/(tabs)/pedidos');
-      } else {
-        router.replace('/(cliente)/(tabs)/catalogo');
-      }
-    }, 1200);
-
-    return () => clearTimeout(timer);
-  }, [usuario]);
+  // A sessão vem do SecureStore, que é assíncrono. Enquanto ela não resolve, a
+  // marca fica na tela: sem esta espera o app piscaria o login antes de
+  // reconhecer quem já estava logado. O tempo mínimo de 1,2s do protótipo saiu
+  // — agora a espera é a real, e não uma encenação.
+  if (!carregando) {
+    if (!usuario) return <Redirect href="/(auth)/login" />;
+    return (
+      <Redirect
+        href={usuario.perfil === 'admin' ? '/(admin)/(tabs)/pedidos' : '/(cliente)/(tabs)/catalogo'}
+      />
+    );
+  }
 
   return (
     <View style={styles.tela}>
