@@ -1,13 +1,16 @@
+import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { auth } from './auth.ts';
-import { ErroApi } from './erros.ts';
+import { config } from './config.ts';
 import { montarDocs } from './docs.ts';
+import { ErroApi } from './erros.ts';
 import type { Variables } from './middleware/sessao.ts';
 import { rotasAgenda } from './rotas/agenda.ts';
 import { rotasPedidos } from './rotas/pedidos.ts';
 import { rotasProdutos } from './rotas/produtos.ts';
+import { rotasUpload } from './rotas/upload.ts';
 
 export function criarApp() {
   const app = new Hono<{ Variables: Variables }>();
@@ -22,6 +25,18 @@ export function criarApp() {
   app.route('/api/produtos', rotasProdutos);
   app.route('/api/agenda', rotasAgenda);
   app.route('/api/pedidos', rotasPedidos);
+  app.route('/api/upload', rotasUpload);
+
+  // `root` recebe o diretório absoluto de uploads, e o prefixo `/uploads` sai do
+  // caminho antes do join — senão o arquivo seria procurado em
+  // `<uploads>/uploads/...`.
+  app.use(
+    '/uploads/*',
+    serveStatic({
+      root: config.uploadsDir,
+      rewriteRequestPath: (caminho) => caminho.replace(/^\/uploads/, ''),
+    }),
+  );
 
   // Por último, para a spec enxergar todas as rotas acima.
   montarDocs(app);

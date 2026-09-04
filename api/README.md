@@ -48,3 +48,22 @@ Depois de mexer no schema: `npm run db:generate && npm run db:migrate`.
 O rate limit do Better Auth guarda o contador em memória. Isso basta para um
 processo só, que é o caso aqui; se um dia a API rodar em várias instâncias, cada
 uma contaria em separado e o limite efetivo se multiplicaria.
+
+## Imagens
+
+`UPLOADS_DIR` aceita caminho absoluto ou relativo. O relativo é resolvido a
+partir da raiz deste pacote (`api/`), e **não** do diretório de trabalho: rodar
+`npm run db:seed` da raiz do monorepo e o servidor de `api/` criaria duas pastas
+diferentes, e as fotos do catálogo não apareceriam no app.
+
+Ali convivem duas coisas com origens distintas:
+
+- `uploads/produtos/` — catálogo, restaurado pelo seed a partir de
+  `seed-assets/produtos/`, que é versionado.
+- `uploads/*.webp` — fotos de referência enviadas pelos clientes, uma por
+  pedido. Só existem na máquina que recebeu o upload; entram no backup junto
+  com o diretório.
+
+Tudo que entra por `POST /api/upload` é reconvertido pelo sharp para WebP com no
+máximo 1200px e nome sorteado. A reconversão é o que garante que o arquivo é
+imagem de verdade: extensão e `Content-Type` vêm do cliente e mentem.
