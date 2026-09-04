@@ -10,7 +10,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "test": "node --import ./hooks/registrar.mjs --test",
+    "test": "node --env-file-if-exists=api/.env --import ./hooks/registrar.mjs --test",
     "typecheck": "npm run typecheck --workspaces --if-present"
   }
 }

@@ -8,6 +8,7 @@ import {
   text,
   timestamp,
 } from 'drizzle-orm/pg-core';
+import { user } from './auth-schema.ts';
 
 export const categoriaEnum = pgEnum('categoria', [
   'cookies',
@@ -73,7 +74,11 @@ export const produtosGrupos = pgTable(
 
 export const pedidos = pgTable('pedidos', {
   id: text('id').primaryKey(),
-  usuarioId: text('usuario_id').notNull(),
+  // Sem `onDelete`: apagar um usuário que tem pedidos é bloqueado pelo banco.
+  // O histórico de encomendas não pode virar registro órfão.
+  usuarioId: text('usuario_id')
+    .notNull()
+    .references(() => user.id),
   produtoId: text('produto_id')
     .notNull()
     .references(() => produtos.id),
@@ -120,3 +125,6 @@ export const agendaConfig = pgTable('agenda_config', {
   id: integer('id').primaryKey().default(1),
   limitePorDia: integer('limite_por_dia').notNull().default(5),
 });
+
+// As tabelas do Better Auth entram no mesmo schema para o drizzle-kit enxergá-las.
+export * from './auth-schema.ts';

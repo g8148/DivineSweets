@@ -1,12 +1,17 @@
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
+import { auth } from './auth.ts';
 import { ErroApi } from './erros.ts';
+import type { Variables } from './middleware/sessao.ts';
 
 export function criarApp() {
-  const app = new Hono();
+  const app = new Hono<{ Variables: Variables }>();
 
   app.use('*', logger());
+
+  // O Better Auth traz as próprias rotas de cadastro, login e sessão.
+  app.on(['POST', 'GET'], '/api/auth/*', (c) => auth.handler(c.req.raw));
 
   app.get('/health', (c) => c.json({ ok: true }));
 

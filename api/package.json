@@ -7,14 +7,16 @@
     "dev": "node --watch --env-file=.env src/index.ts",
     "build": "rolldown -c rolldown.config.ts",
     "start": "node dist/index.js",
-    "test": "node --import ../hooks/registrar.mjs --test",
+    "test": "node --env-file-if-exists=.env --import ../hooks/registrar.mjs --test",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
+    "@better-auth/expo": "^1.7.2",
     "@divine/shared": "^1.0.0",
     "@hono/node-server": "^2.1.1",
+    "better-auth": "^1.7.2",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.13.5",
     "pg": "^8.23.0",
