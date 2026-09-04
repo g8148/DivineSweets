@@ -85,7 +85,7 @@ test('mês em formato inválido responde 400 no formato de erro da API', async (
   assert.strictEqual(res.status, 400);
   // O app trata uma forma só de erro; o objeto cru do Zod não serve.
   assert.deepStrictEqual(await res.json(), {
-    erro: 'Use o formato AAAA-MM',
+    erro: 'mes: Use o formato AAAA-MM',
     codigo: 'consulta_invalida',
   });
 });

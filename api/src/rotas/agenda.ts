@@ -2,7 +2,7 @@ import { disponibilidadeSchema, motivoIndisponivel } from '@divine/shared';
 import { Hono } from 'hono';
 import { describeRoute, resolver, validator } from 'hono-openapi';
 import { z } from 'zod';
-import { ErroApi } from '../erros.ts';
+import { erroDeValidacao } from '../erros.ts';
 import { carregarAgenda, contarOcupacao, diasDoMes } from '../servicos/agenda.ts';
 
 const consultaSchema = z.object({
@@ -21,14 +21,8 @@ export const rotasAgenda = new Hono().get(
       400: { description: 'Mês em formato inválido' },
     },
   }),
-  // Sem o hook, o validador responde com o objeto de erro cru do Zod, num
-  // formato diferente do resto da API. Aqui ele vira ErroApi e sai pelo mesmo
-  // onError, para o app ter uma só forma de erro para tratar.
   validator('query', consultaSchema, (resultado) => {
-    if (!resultado.success) {
-      const [primeiro] = resultado.error;
-      throw new ErroApi(400, primeiro?.message ?? 'Consulta inválida', 'consulta_invalida');
-    }
+    if (!resultado.success) throw erroDeValidacao(resultado.error, 'consulta_invalida');
   }),
   async (c) => {
     const { mes } = c.req.valid('query');
