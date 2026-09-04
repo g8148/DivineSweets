@@ -134,19 +134,38 @@ export const atualizarStatusSchema = z
   })
   .strict();
 
+const camposDoProduto = {
+  nome: z.string().min(1).max(120),
+  categoria: categoriaSchema,
+  descricao: z.string().max(500),
+  precoBase: z.number().int().nonnegative(),
+  imagemUrl: z.string().optional(),
+  gruposIds: z.array(z.string()),
+  permiteMensagem: z.boolean(),
+  permiteFoto: z.boolean(),
+};
+
+/** Cadastro de produto. `ativo` e `ordem` têm padrão porque o formulário não os
+ *  pede: doce novo nasce à venda e no fim da lista. */
 export const produtoAdminSchema = z
   .object({
-    nome: z.string().min(1).max(120),
-    categoria: categoriaSchema,
-    descricao: z.string().max(500),
-    precoBase: z.number().int().nonnegative(),
-    imagemUrl: z.string().optional(),
-    gruposIds: z.array(z.string()),
-    permiteMensagem: z.boolean(),
-    permiteFoto: z.boolean(),
+    ...camposDoProduto,
     ativo: z.boolean().default(true),
     ordem: z.number().int().default(100),
   })
+  .strict();
+
+/**
+ * Edição de produto — os mesmos campos, todos opcionais e **sem os padrões**.
+ *
+ * `.partial()` sobre o schema de cadastro não serve: um campo com `default`
+ * continua sendo preenchido quando está ausente, então toda edição chegava com
+ * `ativo: true` e `ordem: 100`. Mudar só o preço mandava o doce para o fim do
+ * catálogo de todo mundo, e reativava sozinho um produto que estava fora dele.
+ */
+export const produtoAdminPatchSchema = z
+  .object({ ...camposDoProduto, ativo: z.boolean(), ordem: z.number().int() })
+  .partial()
   .strict();
 
 export const bloqueioSchema = z

@@ -1,4 +1,4 @@
-import { produtoAdminSchema, produtoSchema } from '@divine/shared';
+import { produtoAdminPatchSchema, produtoAdminSchema, produtoSchema } from '@divine/shared';
 import { asc, eq, inArray } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { describeRoute, resolver, validator } from 'hono-openapi';
@@ -141,7 +141,7 @@ export const rotasAdminProdutos = new Hono<{ Variables: Variables }>()
         404: { description: 'Produto não encontrado' },
       },
     }),
-    validator('json', produtoAdminSchema.partial(), (resultado) => {
+    validator('json', produtoAdminPatchSchema, (resultado) => {
       if (!resultado.success) throw erroDeValidacao(resultado.error, 'produto_invalido');
     }),
     async (c) => {

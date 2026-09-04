@@ -34,7 +34,11 @@ export default function Entrega() {
   const [mes, setMes] = useState(mesDeHoje);
   const { data: disponibilidade, isFetching } = useDisponibilidade(mes);
 
-  const [erros, setErros] = useState<Erros>(SEM_ERROS);
+  // Guardar as mensagens em estado as deixava na tela depois de a pessoa
+  // escolher a data: o aviso só sumiria no toque seguinte em "Revisar pedido".
+  // O que fica guardado é só o fato de já ter havido uma tentativa; as
+  // mensagens saem do que está preenchido agora.
+  const [tentouRevisar, setTentouRevisar] = useState(false);
 
   const porData = useMemo(
     () => new Map((disponibilidade?.dias ?? []).map((d) => [d.data, d])),
@@ -85,16 +89,17 @@ export default function Entrega() {
 
   const total = calcularTotal(produto, rascunho, entrega.tipo);
 
-  function aoRevisar() {
-    const proximos: Erros = {
-      data: entrega.data ? '' : 'Escolha uma data de entrega',
-      hora: entrega.hora ? '' : 'Escolha um horário',
-      endereco:
-        entrega.tipo === 'entrega' && !entrega.endereco.trim() ? 'Informe o endereço de entrega' : '',
-    };
+  const pendencias: Erros = {
+    data: entrega.data ? '' : 'Escolha uma data de entrega',
+    hora: entrega.hora ? '' : 'Escolha um horário',
+    endereco:
+      entrega.tipo === 'entrega' && !entrega.endereco.trim() ? 'Informe o endereço de entrega' : '',
+  };
+  const erros = tentouRevisar ? pendencias : SEM_ERROS;
 
-    setErros(proximos);
-    if (Object.values(proximos).some(Boolean)) return;
+  function aoRevisar() {
+    setTentouRevisar(true);
+    if (Object.values(pendencias).some(Boolean)) return;
 
     router.push('/(cliente)/resumo');
   }

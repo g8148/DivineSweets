@@ -223,3 +223,24 @@ test('campo desconhecido no corpo é recusado em português', async () => {
   assert.strictEqual(res.status, 400);
   assert.match((await res.json()).erro, /Campo não aceito/);
 });
+
+// O schema de cadastro dá padrão a `ativo` e a `ordem`, e `.partial()` não tira
+// padrão: usá-lo no PATCH fazia todo campo ausente chegar preenchido. Trocar só
+// o preço reescrevia a posição no catálogo — o doce ia para o fim da lista de
+// todos os clientes — e ressuscitava sozinho um produto tirado de venda.
+test('PATCH parcial não mexe em ativo nem em ordem', async () => {
+  const admin = await autenticar('admin');
+  const produto = await criar(admin.Cookie, { ordem: 3, ativo: false });
+
+  const res = await app.request(`/api/admin/produtos/${produto.id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: admin.Cookie },
+    body: JSON.stringify({ precoBase: 7700 }),
+  });
+
+  const corpo = await res.json();
+  assert.strictEqual(res.status, 200, JSON.stringify(corpo));
+  assert.strictEqual(corpo.precoBase, 7700);
+  assert.strictEqual(corpo.ordem, 3);
+  assert.strictEqual(corpo.ativo, false);
+});

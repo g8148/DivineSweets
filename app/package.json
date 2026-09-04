@@ -5,7 +5,7 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
+    "android": "expo run:android",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "test": "node --import ../hooks/registrar.mjs --test"
@@ -16,6 +16,7 @@
     "better-auth": "^1.7.2",
     "expo": "~57.0.12",
     "expo-constants": "~57.0.10",
+    "expo-file-system": "~57.0.6",
     "expo-font": "~57.0.1",
     "expo-image": "~57.0.2",
     "expo-image-picker": "~57.0.9",

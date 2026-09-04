@@ -23,7 +23,10 @@ export default function Personalizar() {
   const { rascunho, atualizar } = useRascunho();
 
   const [avisoFoto, setAvisoFoto] = useState('');
-  const [gruposPendentes, setGruposPendentes] = useState<string[]>([]);
+  // Só o fato de já ter havido uma tentativa fica guardado. Guardar a lista de
+  // grupos pendentes deixava o "Escolha uma opção" na tela depois de a pessoa
+  // escolher: o aviso só sumiria no toque seguinte em "Escolher data".
+  const [tentouAvancar, setTentouAvancar] = useState(false);
 
   if (isPending) {
     return (
@@ -53,6 +56,10 @@ export default function Personalizar() {
   const grupos = produto.grupos;
   const subtotal = calcularSubtotal(produto, rascunho);
 
+  const pendentes = grupos
+    .filter((grupo) => grupo.obrigatorio && !rascunho.selecoes[grupo.id])
+    .map((grupo) => grupo.id);
+
   async function tirarFoto() {
     const permissao = await ImagePicker.requestCameraPermissionsAsync();
     if (!permissao.granted) {
@@ -75,11 +82,7 @@ export default function Personalizar() {
 
   function aoAvancar() {
     if (!rascunho) return;
-    const pendentes = grupos
-      .filter((grupo) => grupo.obrigatorio && !rascunho.selecoes[grupo.id])
-      .map((grupo) => grupo.id);
-
-    setGruposPendentes(pendentes);
+    setTentouAvancar(true);
     if (pendentes.length > 0) return;
 
     router.push('/(cliente)/entrega');
@@ -105,7 +108,7 @@ export default function Personalizar() {
               }
             />
 
-            {gruposPendentes.includes(grupo.id) && (
+            {tentouAvancar && pendentes.includes(grupo.id) && (
               <Texto variante="legenda" cor={cores.alertaTexto}>
                 Escolha uma opção
               </Texto>
