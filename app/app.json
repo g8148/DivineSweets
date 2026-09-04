@@ -35,7 +35,8 @@
           "photosPermission": "O app usa suas fotos para você enviar uma imagem de referência do doce.",
           "cameraPermission": "O app usa a câmera para você fotografar uma referência do doce."
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
