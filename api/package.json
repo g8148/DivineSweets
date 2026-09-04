@@ -10,7 +10,8 @@
     "test": "node --env-file-if-exists=.env --import ../hooks/registrar.mjs --test",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "node --env-file-if-exists=.env src/db/seed.ts"
   },
   "dependencies": {
     "@better-auth/expo": "^1.7.2",
@@ -20,6 +21,7 @@
     "drizzle-orm": "^0.45.2",
     "hono": "^4.13.5",
     "pg": "^8.23.0",
+    "sharp": "^0.35.4",
     "zod": "^4.5.4"
   },
   "devDependencies": {
