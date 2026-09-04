@@ -7,6 +7,7 @@ import { config } from './config.ts';
 import { montarDocs } from './docs.ts';
 import { ErroApi } from './erros.ts';
 import type { Variables } from './middleware/sessao.ts';
+import { rotasAdminAgenda } from './rotas/admin/agenda.ts';
 import { rotasAdminPedidos } from './rotas/admin/pedidos.ts';
 import { rotasAdminProdutos } from './rotas/admin/produtos.ts';
 import { rotasAgenda } from './rotas/agenda.ts';
@@ -30,6 +31,7 @@ export function criarApp() {
   app.route('/api/upload', rotasUpload);
   app.route('/api/admin/pedidos', rotasAdminPedidos);
   app.route('/api/admin/produtos', rotasAdminProdutos);
+  app.route('/api/admin/agenda', rotasAdminAgenda);
 
   // `root` recebe o diretório absoluto de uploads, e o prefixo `/uploads` sai do
   // caminho antes do join — senão o arquivo seria procurado em

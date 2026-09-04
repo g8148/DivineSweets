@@ -6,6 +6,7 @@ import { criarApp } from '../app.ts';
 import { db } from '../db/client.ts';
 import { agendaBloqueios, pedidoSelecoes } from '../db/schema.ts';
 import { autenticar, limparUsuariosDeTeste } from '../testes/sessao.ts';
+import { comTravaGlobal, TRAVA_AGENDA } from '../testes/trava.ts';
 
 // O catálogo vem do seed (`npm run db:seed`), como nos demais testes de rota.
 const app = criarApp();
@@ -184,9 +185,12 @@ test('grava o snapshot da seleção, não só o id', async () => {
 test('dez pedidos simultâneos no mesmo dia não furam o limite da agenda', async () => {
   const { Cookie } = await autenticar();
 
-  const respostas = await Promise.all(
-    Array.from({ length: 10 }, () =>
-      postar(corpo({ dataEntrega: DATA.corrida }), { Cookie }),
+  // Sob a trava: o limite diário é uma linha global, e o teste da agenda
+  // administrativa a altera. Sem serializar, este teste falharia por causa do
+  // outro, e a mensagem não diria nada sobre a causa.
+  const respostas = await comTravaGlobal(TRAVA_AGENDA, () =>
+    Promise.all(
+      Array.from({ length: 10 }, () => postar(corpo({ dataEntrega: DATA.corrida }), { Cookie })),
     ),
   );
 
