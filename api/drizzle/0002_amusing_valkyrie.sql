@@ -1,0 +1,1 @@
+ALTER TABLE "pedido_selecoes" ADD COLUMN "ordem" integer DEFAULT 0 NOT NULL;

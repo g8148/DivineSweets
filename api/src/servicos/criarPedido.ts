@@ -7,6 +7,7 @@ import { ErroApi } from '../erros.ts';
 import type { Usuario } from '../middleware/sessao.ts';
 import { carregarProduto } from '../rotas/produtos.ts';
 import { carregarAgenda, contarOcupacao } from './agenda.ts';
+import { montarPedido } from './lerPedidos.ts';
 
 const MOTIVOS: Record<string, string> = {
   passado: 'Essa data já passou.',
@@ -128,19 +129,15 @@ export async function criarPedido(usuario: Usuario, dados: CriarPedido) {
     if (snapshot.length > 0) {
       await tx
         .insert(pedidoSelecoes)
-        .values(snapshot.map((s) => ({ id: randomUUID(), pedidoId: id, ...s })));
+        .values(snapshot.map((s, ordem) => ({ id: randomUUID(), pedidoId: id, ordem, ...s })));
     }
 
-    return {
-      ...pedido,
-      selecoes: snapshot.map(({ grupoTitulo, opcaoNome, delta }) => ({
-        grupoTitulo,
-        opcaoNome,
-        delta,
-      })),
-      criadoEm: pedido.criadoEm.toISOString(),
-      clienteNome: usuario.nome,
-      clienteTelefone: usuario.telefone,
-    };
+    // Mesmo formato da leitura: o app não deve precisar de dois tipos para o
+    // pedido que acabou de criar e o que ele lê depois.
+    return montarPedido(
+      pedido,
+      snapshot.map(({ grupoTitulo, opcaoNome, delta }) => ({ grupoTitulo, opcaoNome, delta })),
+      { nome: usuario.nome, telefone: usuario.telefone },
+    );
   });
 }

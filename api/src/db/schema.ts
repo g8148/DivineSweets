@@ -114,6 +114,10 @@ export const pedidoSelecoes = pgTable('pedido_selecoes', {
   grupoTitulo: text('grupo_titulo').notNull(),
   opcaoNome: text('opcao_nome').notNull(),
   delta: integer('delta').notNull(),
+  // A ordem em que os grupos aparecem no produto. Sem ela o SELECT devolve as
+  // linhas na ordem que o Postgres quiser, e o detalhe do pedido mostraria
+  // "Recheio, Tamanho, Cobertura" num pedido e outra sequência no seguinte.
+  ordem: integer('ordem').notNull().default(0),
 });
 
 export const agendaBloqueios = pgTable('agenda_bloqueios', {
