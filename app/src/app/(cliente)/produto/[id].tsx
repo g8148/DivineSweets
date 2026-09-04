@@ -1,31 +1,40 @@
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { montarUrl } from '@/api/client';
+import { useProduto } from '@/api/produtos';
 import { Botao } from '@/components/Botao';
 import { Cabecalho } from '@/components/Cabecalho';
 import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
-import { formatarMoeda } from '@divine/shared';
-import { categorias } from '@divine/shared';
-import { usePedidos } from '@/state/PedidosContext';
+import { categorias, formatarMoeda } from '@divine/shared';
 import { useRascunho } from '@/state/RascunhoPedidoContext';
 import { cores, espaco } from '@/theme';
-import { imagemDoProduto } from '@/data/imagens';
 
 export default function DetalheProduto() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { produtosAdmin } = usePedidos();
+  const { data: produto, isPending, isError, refetch } = useProduto(id);
   const { iniciar } = useRascunho();
   const insets = useSafeAreaInsets();
 
-  const produto = produtosAdmin.find((p) => p.id === id);
-
-  if (!produto) {
+  if (isPending) {
     return (
       <View style={styles.tela}>
         <Cabecalho titulo="Produto" comVoltar />
-        <Vazio mensagem="Produto não encontrado." />
+        <ActivityIndicator color={cores.vinho} style={styles.carregando} />
+      </View>
+    );
+  }
+
+  if (isError || !produto) {
+    return (
+      <View style={styles.tela}>
+        <Cabecalho titulo="Produto" comVoltar />
+        <Vazio
+          mensagem="Não foi possível carregar este doce."
+          acao={{ rotulo: 'Tentar novamente', aoTocar: () => refetch() }}
+        />
       </View>
     );
   }
@@ -43,7 +52,12 @@ export default function DetalheProduto() {
       <Cabecalho titulo={produto.nome} comVoltar />
 
       <ScrollView contentContainerStyle={styles.conteudo}>
-        <Image source={imagemDoProduto(produto.id)} style={styles.foto} contentFit="cover" />
+        <Image
+          source={produto.imagemUrl ? { uri: montarUrl(produto.imagemUrl) } : require('@/assets/logomarca.jpg')}
+          style={styles.foto}
+          contentFit="cover"
+          transition={200}
+        />
 
         <View style={styles.corpo}>
           <Texto variante="titulo" peso="bold">
@@ -74,6 +88,7 @@ export default function DetalheProduto() {
 const styles = StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.branco },
   conteudo: { paddingBottom: 96 },
+  carregando: { marginTop: espaco.xl },
   foto: { width: '100%', height: 280 },
   corpo: { padding: espaco.lg },
   categoria: { marginTop: espaco.xs },

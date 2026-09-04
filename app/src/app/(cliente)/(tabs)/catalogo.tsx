@@ -1,31 +1,33 @@
 import { useMemo, useState } from 'react';
 import { router } from 'expo-router';
-import { FlatList, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useProdutos } from '@/api/produtos';
 import { Cabecalho } from '@/components/Cabecalho';
 import { CardProduto } from '@/components/CardProduto';
 import { Chip } from '@/components/Chip';
 import { Vazio } from '@/components/Vazio';
 import { Search } from '@/components/icones';
 import { categorias } from '@divine/shared';
-import { usePedidos } from '@/state/PedidosContext';
 import { cores, espaco, fonte, raio, tamanhoFonte } from '@/theme';
 
 const normalizar = (s: string) =>
   s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
 export default function Catalogo() {
-  const { produtosAdmin } = usePedidos();
+  const { data: produtos, isPending, isError, refetch } = useProdutos();
   const [busca, setBusca] = useState('');
   const [categoriaAtiva, setCategoriaAtiva] = useState<string>('todos');
 
+  // Busca e categoria continuam locais: filtrar 14 produtos na memória é
+  // instantâneo, e uma ida ao servidor a cada letra digitada não seria.
   const filtrados = useMemo(
     () =>
-      produtosAdmin.filter((p) => {
+      (produtos ?? []).filter((p) => {
         const casaCategoria = categoriaAtiva === 'todos' || p.categoria === categoriaAtiva;
         const casaBusca = normalizar(p.nome).includes(normalizar(busca.trim()));
         return casaCategoria && casaBusca;
       }),
-    [produtosAdmin, categoriaAtiva, busca],
+    [produtos, categoriaAtiva, busca],
   );
 
   return (
@@ -60,6 +62,14 @@ export default function Catalogo() {
         ))}
       </ScrollView>
 
+      {isPending ? (
+        <ActivityIndicator color={cores.vinho} style={styles.carregando} />
+      ) : isError ? (
+        <Vazio
+          mensagem="Não foi possível carregar o catálogo. Verifique sua conexão."
+          acao={{ rotulo: 'Tentar novamente', aoTocar: () => refetch() }}
+        />
+      ) : (
       <FlatList
         data={filtrados}
         keyExtractor={(p) => p.id}
@@ -71,6 +81,7 @@ export default function Catalogo() {
         )}
         ListEmptyComponent={<Vazio mensagem="Nenhum doce encontrado com esse nome." />}
       />
+      )}
     </View>
   );
 }
@@ -98,6 +109,7 @@ const styles = StyleSheet.create({
   // abaixo e os rótulos dos chips ficam cortados.
   categoriasScroll: { flexGrow: 0, flexShrink: 0 },
   categorias: { gap: espaco.sm, paddingHorizontal: espaco.md, paddingVertical: espaco.md, alignItems: 'center' },
+  carregando: { marginTop: espaco.xl },
   coluna: { gap: espaco.md },
   lista: { padding: espaco.md, paddingTop: 0, gap: espaco.md },
 });

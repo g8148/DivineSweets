@@ -1,21 +1,30 @@
 import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
+import { montarUrl } from '@/api/client';
 import { Cartao } from '@/components/Cartao';
 import { Texto } from '@/components/Texto';
 import { formatarMoeda } from '@divine/shared';
 import { cores, espaco } from '@/theme';
-import type { Produto } from '@divine/shared';
-import { imagemDoProduto } from '@/data/imagens';
 
 type Props = {
-  produto: Produto;
+  produto: { id: string; nome: string; precoBase: number; imagemUrl: string | null };
   onPress: () => void;
 };
 
+/**
+ * A foto vem do servidor por URL relativa (`/uploads/...`), e não mais do
+ * bundle. O produto que a confeiteira acabou de cadastrar nasce sem imagem —
+ * daí o recurso à logomarca, para o card não abrir um buraco na grade.
+ */
 export function CardProduto({ produto, onPress }: Props) {
   return (
     <Cartao onPress={onPress} style={styles.cartao}>
-      <Image source={imagemDoProduto(produto.id)} style={styles.foto} contentFit="cover" />
+      <Image
+        source={produto.imagemUrl ? { uri: montarUrl(produto.imagemUrl) } : require('@/assets/logomarca.jpg')}
+        style={styles.foto}
+        contentFit="cover"
+        transition={200}
+      />
       <View style={styles.corpo}>
         <Texto peso="semibold" numberOfLines={2}>
           {produto.nome}
