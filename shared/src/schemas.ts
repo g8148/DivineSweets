@@ -62,6 +62,11 @@ export const produtoSchema = z.object({
   imagemUrl: z.string().nullable(),
   permiteMensagem: z.boolean(),
   permiteFoto: z.boolean(),
+  // Sempre `true` no catálogo público — a listagem já filtra. Está aqui porque
+  // a administração usa este mesmo tipo e precisa distinguir o produto que ela
+  // desativou daquele que continua à venda.
+  ativo: z.boolean(),
+  ordem: z.number().int(),
   grupos: z.array(grupoOpcaoSchema),
 });
 

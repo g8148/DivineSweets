@@ -13,10 +13,18 @@ export type ProdutoComGrupos = z.infer<typeof produtoSchema>;
  * Monta o produto com grupos e opções embutidos. A tela de personalização
  * precisa de tudo de uma vez; três requisições encadeadas dariam três estados
  * de carregamento em sequência.
+ *
+ * `incluirInativos` é para a administração. O catálogo público some com o
+ * produto desativado, mas quem administra tem de continuar abrindo, editando e
+ * reativando — sem isso, desativar um produto seria irreversível pelo app.
  */
-export async function carregarProduto(id: string): Promise<ProdutoComGrupos | null> {
+export async function carregarProduto(
+  id: string,
+  incluirInativos = false,
+): Promise<ProdutoComGrupos | null> {
   const [produto] = await db.select().from(produtos).where(eq(produtos.id, id));
-  if (!produto || !produto.ativo) return null;
+  if (!produto) return null;
+  if (!produto.ativo && !incluirInativos) return null;
 
   const vinculos = await db
     .select({ grupo: gruposOpcoes, ordem: produtosGrupos.ordem })
@@ -47,6 +55,8 @@ export async function carregarProduto(id: string): Promise<ProdutoComGrupos | nu
     imagemUrl: produto.imagemUrl,
     permiteMensagem: produto.permiteMensagem,
     permiteFoto: produto.permiteFoto,
+    ativo: produto.ativo,
+    ordem: produto.ordem,
     grupos,
   };
 }

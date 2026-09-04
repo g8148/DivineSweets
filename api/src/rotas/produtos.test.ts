@@ -1,17 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { produtoSchema } from '@divine/shared';
+import { catalogo, produtoSchema } from '@divine/shared';
 import { criarApp } from '../app.ts';
 import { semear } from '../db/seed.ts';
 
 await semear();
 const app = criarApp();
 
+// Presença dos 14, e não contagem exata: os testes de administração rodam em
+// paralelo e criam produtos temporários que também são públicos enquanto vivem.
 test('lista o catálogo sem exigir login', async () => {
   const res = await app.request('/api/produtos');
   assert.strictEqual(res.status, 200);
-  const corpo = await res.json();
-  assert.strictEqual(corpo.length, 14);
+  const ids = new Set((await res.json()).map((p: { id: string }) => p.id));
+  for (const produto of catalogo) {
+    assert.ok(ids.has(produto.id), `${produto.id} faltou no catálogo`);
+  }
 });
 
 // O contrato que o app consome é o mesmo schema Zod compartilhado. Validar a
