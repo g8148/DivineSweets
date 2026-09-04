@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useProduto } from '@/api/produtos';
 import { Botao } from '@/components/Botao';
 import { Cabecalho } from '@/components/Cabecalho';
 import { Campo } from '@/components/Campo';
@@ -12,33 +13,45 @@ import { SeletorQuantidade } from '@/components/SeletorQuantidade';
 import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
 import { Camera, Images } from '@/components/icones';
-import { gruposDoProduto } from '@divine/shared';
-import { calcularSubtotal } from '@divine/shared';
-import { usePedidos } from '@/state/PedidosContext';
+import { calcularSubtotalDeGrupos } from '@divine/shared';
 import { useRascunho } from '@/state/RascunhoPedidoContext';
 import { cores, espaco, raio } from '@/theme';
 
 export default function Personalizar() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { produtosAdmin } = usePedidos();
+  const { data: produto, isPending, isError, refetch } = useProduto(id);
   const { rascunho, atualizar } = useRascunho();
 
   const [avisoFoto, setAvisoFoto] = useState('');
   const [gruposPendentes, setGruposPendentes] = useState<string[]>([]);
 
-  const produto = produtosAdmin.find((p) => p.id === id);
-
-  if (!produto || !rascunho) {
+  if (isPending) {
     return (
       <View style={styles.tela}>
         <Cabecalho titulo="Personalizar" comVoltar />
-        <Vazio mensagem="Produto não encontrado." />
+        <ActivityIndicator color={cores.vinho} style={styles.carregando} />
       </View>
     );
   }
 
-  const grupos = gruposDoProduto(produto);
-  const subtotal = calcularSubtotal(produto, rascunho);
+  if (isError || !produto || !rascunho) {
+    return (
+      <View style={styles.tela}>
+        <Cabecalho titulo="Personalizar" comVoltar />
+        <Vazio
+          mensagem="Não foi possível carregar as opções deste doce."
+          acao={{ rotulo: 'Tentar novamente', aoTocar: () => refetch() }}
+        />
+      </View>
+    );
+  }
+
+  // Os grupos vêm embutidos na resposta: não há mais consulta ao catálogo do
+  // pacote compartilhado. O preço continua sendo calculado aqui, para responder
+  // ao toque sem esperar a rede — mas a partir dos deltas do banco, e não dos
+  // congelados no código, senão o total mostrado divergiria do cobrado.
+  const grupos = produto.grupos;
+  const subtotal = calcularSubtotalDeGrupos(produto, rascunho);
 
   async function tirarFoto() {
     const permissao = await ImagePicker.requestCameraPermissionsAsync();
@@ -169,6 +182,7 @@ export default function Personalizar() {
 
 const styles = StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.branco },
+  carregando: { marginTop: espaco.xl },
   conteudo: { padding: espaco.md, paddingBottom: 140, gap: espaco.lg },
   grupo: { gap: espaco.sm },
   botoesFoto: { flexDirection: 'row', gap: espaco.sm },

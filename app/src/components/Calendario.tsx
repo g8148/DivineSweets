@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Texto } from '@/components/Texto';
 import { ChevronLeft, ChevronRight } from '@/components/icones';
@@ -15,6 +15,13 @@ type Props = {
   /** Pintura extra, usada pela agenda do admin. Ausente, nada muda. */
   marcarDia?: (iso: string) => Marcacao;
   mesInicial?: Date;
+  /**
+   * Avisa qual mês está à vista, no formato AAAA-MM. Quem desenha o calendário
+   * decide o mês; quem precisa dos dados daquele mês é a tela. Sem este aviso,
+   * a tela buscaria a disponibilidade de um mês e o usuário estaria olhando
+   * outro.
+   */
+  aoMudarMes?: (mes: string) => void;
   /** A agenda do admin tem a sua própria legenda, com outros estados. */
   mostrarLegenda?: boolean;
 };
@@ -46,9 +53,16 @@ export function Calendario({
   avaliarDia,
   marcarDia,
   mesInicial,
+  aoMudarMes,
   mostrarLegenda = true,
 }: Props) {
   const [mesVisivel, setMesVisivel] = useState(() => primeiroDoMes(mesInicial ?? new Date()));
+
+  // Em efeito, e não no `mudarMes`: assim o primeiro mês também é anunciado, e
+  // a tela não precisa adivinhar qual é o mês inicial para buscar os dados.
+  useEffect(() => {
+    aoMudarMes?.(`${mesVisivel.getFullYear()}-${String(mesVisivel.getMonth() + 1).padStart(2, '0')}`);
+  }, [mesVisivel, aoMudarMes]);
 
   const mesCorrente = primeiroDoMes(new Date());
   const noMesCorrente = mesVisivel.getTime() <= mesCorrente.getTime();

@@ -31,3 +31,43 @@ export function calcularTotal(
   const subtotal = calcularSubtotal(produto, personalizacao);
   return subtotal + (tipoEntrega === 'entrega' ? TAXA_ENTREGA : 0);
 }
+
+/** O produto como a API o devolve: com os grupos e as opções embutidos. */
+type ProdutoComGrupos = {
+  precoBase: number;
+  grupos: { id: string; opcoes: { id: string; delta: number }[] }[];
+};
+
+type Escolhas = { selecoes: Record<string, string>; quantidade: number };
+
+/**
+ * Subtotal a partir do produto que a API devolveu.
+ *
+ * `calcularSubtotal` resolve os deltas no catálogo estático deste pacote; este
+ * resolve nos grupos que vieram do banco. A diferença importa: o preço de uma
+ * opção pode ser editado no servidor, e o valor congelado no código faria a
+ * tela mostrar um total diferente do que o pedido seria cobrado.
+ */
+export function calcularSubtotalDeGrupos(
+  produto: ProdutoComGrupos,
+  escolhas: Escolhas,
+): number {
+  const deltas = produto.grupos.map((grupo) => {
+    const opcaoId = escolhas.selecoes[grupo.id];
+    if (!opcaoId) return 0;
+    return grupo.opcoes.find((o) => o.id === opcaoId)?.delta ?? 0;
+  });
+
+  return somarPreco(produto.precoBase, deltas, escolhas.quantidade);
+}
+
+export function calcularTotalDeGrupos(
+  produto: ProdutoComGrupos,
+  escolhas: Escolhas,
+  tipoEntrega: 'entrega' | 'retirada',
+): number {
+  return (
+    calcularSubtotalDeGrupos(produto, escolhas) +
+    (tipoEntrega === 'entrega' ? TAXA_ENTREGA : 0)
+  );
+}
