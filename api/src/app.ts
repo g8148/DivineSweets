@@ -5,6 +5,7 @@ import { auth } from './auth.ts';
 import { ErroApi } from './erros.ts';
 import { montarDocs } from './docs.ts';
 import type { Variables } from './middleware/sessao.ts';
+import { rotasAgenda } from './rotas/agenda.ts';
 import { rotasProdutos } from './rotas/produtos.ts';
 
 export function criarApp() {
@@ -18,6 +19,7 @@ export function criarApp() {
   app.get('/health', (c) => c.json({ ok: true }));
 
   app.route('/api/produtos', rotasProdutos);
+  app.route('/api/agenda', rotasAgenda);
 
   // Por último, para a spec enxergar todas as rotas acima.
   montarDocs(app);
