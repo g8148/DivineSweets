@@ -20,6 +20,21 @@ export const statusPedidoSchema = z.enum([
 export const categoriaSchema = z.enum(['cookies', 'bolos', 'brownies', 'sazonais']);
 
 /**
+ * Caminho de imagem servida pela própria API, como `/uploads/<arquivo>.webp` —
+ * é exatamente o que `POST /api/upload` devolve.
+ *
+ * Não é `z.url()`: uma URL absoluta gravada no pedido quebraria no dia em que o
+ * domínio mudasse, e aceitaria apontar a foto do pedido para qualquer endereço
+ * na internet, inclusive um `javascript:`. O app monta a URL completa na hora
+ * de exibir, com a mesma base que já usa para o resto da API.
+ */
+export const caminhoDeUploadSchema = z
+  .string()
+  // O `(?!.*\.\.)` barra travessia de caminho: sem ele, `/uploads/../../etc/x`
+  // casaria com o resto do padrão e ficaria gravado no pedido.
+  .regex(/^\/uploads\/(?!.*\.\.)[A-Za-z0-9._\/-]+$/, 'Use o caminho devolvido pelo upload');
+
+/**
  * Corpo do POST /api/pedidos. Nenhum campo monetário: o servidor recalcula o
  * preço a partir do produto e das seleções. `.strict()` faz o Zod rejeitar
  * qualquer `total` ou `subtotal` que o cliente tente enviar.
@@ -30,7 +45,7 @@ export const criarPedidoSchema = z
     quantidade: z.number().int().positive().max(100),
     selecoes: z.record(z.string(), z.string()),
     mensagem: z.string().max(280).optional(),
-    fotoUrl: z.url().optional(),
+    fotoUrl: caminhoDeUploadSchema.optional(),
     tipoEntrega: tipoEntregaSchema,
     dataEntrega: dataISOSchema,
     horaEntrega: horaSchema,

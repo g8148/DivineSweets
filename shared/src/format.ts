@@ -35,3 +35,25 @@ export function paraISO(data: Date): string {
   const dia = String(data.getDate()).padStart(2, '0');
   return `${ano}-${mes}-${dia}`;
 }
+
+/**
+ * As seleções em pares rótulo/valor, a partir dos grupos que a API devolve
+ * embutidos no produto.
+ *
+ * A irmã em `catalogo.ts`, `descreverSelecoes`, resolve os títulos no catálogo
+ * estático — serve ao que ainda usa o `Produto` local. Esta serve às telas
+ * ligadas à API, onde os títulos vêm do banco e podem ter sido editados.
+ */
+export function descreverSelecoesDeGrupos(
+  grupos: { id: string; titulo: string; opcoes: { id: string; nome: string }[] }[],
+  selecoes: Record<string, string>,
+): { rotulo: string; valor: string }[] {
+  return grupos.flatMap((grupo) => {
+    const opcaoId = selecoes[grupo.id];
+    if (!opcaoId) return [];
+    const opcao = grupo.opcoes.find((o) => o.id === opcaoId);
+    // Seleção que não existe mais no grupo é ignorada, e não exibida como
+    // "undefined": pode ser um rascunho aberto antes de a opção ser removida.
+    return opcao ? [{ rotulo: grupo.titulo, valor: opcao.nome }] : [];
+  });
+}

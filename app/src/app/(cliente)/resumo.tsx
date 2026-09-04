@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { ApiError, montarUrl } from '@/api/client';
+import { useCriarPedido, useEnviarFoto } from '@/api/pedidos';
+import { useProduto } from '@/api/produtos';
+import { useAuth } from '@/auth/useAuth';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Botao } from '@/components/Botao';
 import { Cabecalho } from '@/components/Cabecalho';
@@ -12,34 +16,34 @@ import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
 import { Copy } from '@/components/icones';
 import { diaDaSemana, formatarData, formatarMoeda } from '@divine/shared';
-import { descreverSelecoes } from '@divine/shared';
-import { calcularSubtotal, calcularTotal, TAXA_ENTREGA } from '@divine/shared';
-import { useAuth } from '@/state/AuthContext';
-import { usePedidos } from '@/state/PedidosContext';
+import { descreverSelecoesDeGrupos } from '@divine/shared';
+import { calcularSubtotalDeGrupos, calcularTotalDeGrupos, TAXA_ENTREGA } from '@divine/shared';
 import { useRascunho } from '@/state/RascunhoPedidoContext';
 import { cores, espaco, raio } from '@/theme';
-import { imagemDoProduto } from '@/data/imagens';
 
 const CODIGO_PIX =
   '00020126580014BR.GOV.BCB.PIX0136divine-sweets-doceria5204000053039865802BR';
 
 export default function Resumo() {
   const { rascunho, entrega, limpar } = useRascunho();
-  const { produtosAdmin, criarPedido } = usePedidos();
-  const { usuario, adicionarEndereco } = useAuth();
+  const { data: produto, isPending: carregandoProduto } = useProduto(rascunho?.produtoId ?? '');
+  const { usuario } = useAuth();
+  const criar = useCriarPedido();
+  const enviarFoto = useEnviarFoto();
   const insets = useSafeAreaInsets();
 
   const [pagamento, setPagamento] = useState<'pix' | 'entrega'>('pix');
   const [copiado, setCopiado] = useState(false);
+  const [aviso, setAviso] = useState('');
   const timerCopia = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => {
     if (timerCopia.current) clearTimeout(timerCopia.current);
   }, []);
 
-  const produto = produtosAdmin.find((p) => p.id === rascunho?.produtoId);
-
-  if (!produto || !rascunho) {
+  // Antes da espera do produto: sem rascunho a consulta fica desabilitada e
+  // `isPending` nunca resolve.
+  if (!rascunho) {
     return (
       <View style={styles.tela}>
         <Cabecalho titulo="Resumo do pedido" comVoltar />
@@ -48,10 +52,31 @@ export default function Resumo() {
     );
   }
 
-  const subtotal = calcularSubtotal(produto, rascunho);
+  if (carregandoProduto) {
+    return (
+      <View style={styles.tela}>
+        <Cabecalho titulo="Resumo do pedido" comVoltar />
+        <ActivityIndicator color={cores.vinho} style={styles.carregando} />
+      </View>
+    );
+  }
+
+  if (!produto) {
+    return (
+      <View style={styles.tela}>
+        <Cabecalho titulo="Resumo do pedido" comVoltar />
+        <Vazio mensagem="Não foi possível carregar este doce." />
+      </View>
+    );
+  }
+
+  // Os valores aqui são só para conferência: quem calcula o que será cobrado é
+  // o servidor, a partir do próprio catálogo. Se divergirem, quem vale é ele.
+  const subtotal = calcularSubtotalDeGrupos(produto, rascunho);
   const taxa = entrega.tipo === 'entrega' ? TAXA_ENTREGA : 0;
-  const total = calcularTotal(produto, rascunho, entrega.tipo);
-  const selecoes = descreverSelecoes(produto, rascunho);
+  const total = calcularTotalDeGrupos(produto, rascunho, entrega.tipo);
+  const selecoes = descreverSelecoesDeGrupos(produto.grupos, rascunho.selecoes);
+  const enviando = criar.isPending || enviarFoto.isPending;
 
   function copiarPix() {
     // Simulação declarada (RN09): o protótipo não integra com nenhum PSP.
@@ -60,23 +85,46 @@ export default function Resumo() {
     timerCopia.current = setTimeout(() => setCopiado(false), 2000);
   }
 
-  function confirmar() {
-    if (!rascunho || !usuario) return;
+  async function confirmar() {
+    if (!rascunho) return;
+    setAviso('');
 
-    const id = criarPedido({
-      clienteNome: usuario.nome,
-      clienteTelefone: usuario.telefone,
-      personalizacao: rascunho,
-      entrega,
-      total,
-    });
+    try {
+      // A foto primeiro: o pedido guarda a URL devolvida pelo upload, não o
+      // arquivo. Falhando aqui, nenhum pedido é criado — melhor do que um
+      // pedido gravado sem a referência que o cliente anexou.
+      const fotoUrl = rascunho.fotoUri
+        ? (await enviarFoto.mutateAsync(rascunho.fotoUri)).url
+        : undefined;
 
-    if (entrega.tipo === 'entrega') adicionarEndereco(entrega.endereco);
-    limpar();
-    // Sem descartar a pilha, o botão voltar do Android leva de volta às telas do
-    // rascunho que acabaram de ser limpas.
-    router.dismissAll();
-    router.replace({ pathname: '/(cliente)/confirmado', params: { id } });
+      const pedido = await criar.mutateAsync({
+        produtoId: rascunho.produtoId,
+        quantidade: rascunho.quantidade,
+        selecoes: rascunho.selecoes,
+        mensagem: rascunho.mensagem || undefined,
+        fotoUrl,
+        tipoEntrega: entrega.tipo,
+        dataEntrega: entrega.data,
+        horaEntrega: entrega.hora,
+        endereco: entrega.tipo === 'entrega' ? entrega.endereco : undefined,
+      });
+
+      limpar();
+      // Sem descartar a pilha, o botão voltar do Android leva de volta às telas
+      // do rascunho que acabaram de ser limpas.
+      router.dismissAll();
+      router.replace({ pathname: '/(cliente)/confirmado', params: { id: pedido.id } });
+    } catch (erro) {
+      // 409 é a data que lotou entre a escolha no calendário e este toque.
+      // Mandar de volta ao calendário é a única saída útil: repetir o envio
+      // daria o mesmo erro.
+      if (erro instanceof ApiError && erro.status === 409) {
+        setAviso(erro.message);
+        router.back();
+        return;
+      }
+      setAviso(erro instanceof Error ? erro.message : 'Não foi possível enviar o pedido');
+    }
   }
 
   return (
@@ -87,7 +135,13 @@ export default function Resumo() {
         <Cartao style={styles.cartao}>
           <Texto peso="semibold">Produto</Texto>
           <View style={styles.produto}>
-            <Image source={imagemDoProduto(produto.id)} style={styles.miniatura} contentFit="cover" />
+            <Image
+              source={
+                produto.imagemUrl ? { uri: montarUrl(produto.imagemUrl) } : require('@/assets/logomarca.jpg')
+              }
+              style={styles.miniatura}
+              contentFit="cover"
+            />
             <Texto peso="semibold" style={styles.nomeProduto}>
               {produto.nome}
             </Texto>
@@ -167,7 +221,16 @@ export default function Resumo() {
       </ScrollView>
 
       <View style={[styles.rodape, { paddingBottom: espaco.md + insets.bottom }]}>
-        <Botao titulo="Confirmar Pedido" onPress={confirmar} />
+        {aviso ? (
+          <Texto variante="legenda" cor={cores.alertaTexto} style={styles.aviso}>
+            {aviso}
+          </Texto>
+        ) : null}
+        <Botao
+          titulo={enviando ? 'Enviando…' : 'Confirmar Pedido'}
+          onPress={confirmar}
+          desabilitado={enviando}
+        />
       </View>
     </View>
   );
@@ -176,6 +239,8 @@ export default function Resumo() {
 const styles = StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.branco },
   conteudo: { padding: espaco.md, paddingBottom: 110, gap: espaco.md },
+  carregando: { marginTop: espaco.xl },
+  aviso: { marginBottom: espaco.sm },
   cartao: { padding: espaco.md },
   produto: { flexDirection: 'row', alignItems: 'center', gap: espaco.md, paddingVertical: espaco.sm },
   miniatura: { width: 64, height: 64, borderRadius: raio.md },
