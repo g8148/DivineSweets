@@ -6,8 +6,6 @@ import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { queryClient } from '@/api/queries';
-import { AuthProvider } from '@/state/AuthContext';
-import { PedidosProvider } from '@/state/PedidosContext';
 import { RascunhoPedidoProvider } from '@/state/RascunhoPedidoContext';
 import { cores } from '@/theme';
 
@@ -28,23 +26,19 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      {/* O TanStack Query passa a ser o dono do estado de servidor. Os dois
-          Providers antigos continuam por ora e saem quando as telas que ainda
-          dependem deles forem migradas — trocar tudo de uma vez deixaria o app
-          sem rodar entre um commit e outro. */}
+      {/* O TanStack Query é o dono do estado de servidor: cache, revalidação e
+          invalidação. O único Context que sobrou é o do rascunho, que é estado
+          de tela — o pedido que está sendo montado ainda não existe no
+          servidor. */}
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <PedidosProvider>
-            <RascunhoPedidoProvider>
-              {/* Ícones escuros por padrão: as telas sem Cabecalho são claras. O
-                  Cabecalho monta o seu próprio StatusBar claro sobre o vinho. */}
-              <StatusBar style="dark" />
-              <Stack
-                screenOptions={{ headerShown: false, contentStyle: { backgroundColor: cores.branco }}}
-              />
-            </RascunhoPedidoProvider>
-          </PedidosProvider>
-        </AuthProvider>
+        <RascunhoPedidoProvider>
+          {/* Ícones escuros por padrão: as telas sem Cabecalho são claras. O
+              Cabecalho monta o seu próprio StatusBar claro sobre o vinho. */}
+          <StatusBar style="dark" />
+          <Stack
+            screenOptions={{ headerShown: false, contentStyle: { backgroundColor: cores.branco }}}
+          />
+        </RascunhoPedidoProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
   );

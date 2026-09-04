@@ -10,7 +10,7 @@ import { Chip } from '@/components/Chip';
 import { PrecoRodape } from '@/components/PrecoRodape';
 import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
-import { calcularTotalDeGrupos, formatarMoeda, TAXA_ENTREGA } from '@divine/shared';
+import { calcularTotal, formatarMoeda, TAXA_ENTREGA } from '@divine/shared';
 import { useRascunho } from '@/state/RascunhoPedidoContext';
 import { cores, espaco } from '@/theme';
 
@@ -83,7 +83,7 @@ export default function Entrega() {
     );
   }
 
-  const total = calcularTotalDeGrupos(produto, rascunho, entrega.tipo);
+  const total = calcularTotal(produto, rascunho, entrega.tipo);
 
   function aoRevisar() {
     const proximos: Erros = {

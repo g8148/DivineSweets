@@ -32,22 +32,3 @@ export function motivoIndisponivel(
 
   return null;
 }
-
-export function dataDisponivel(
-  dataISO: string,
-  agenda: Agenda,
-  ocupacao: Record<string, number>,
-  agora: Date,
-): boolean {
-  return motivoIndisponivel(dataISO, agenda, ocupacao, agora) === null;
-}
-
-export function contarOcupacao(
-  pedidos: { entrega: { data: string }; status: string }[],
-): Record<string, number> {
-  return pedidos.reduce<Record<string, number>>((acc, pedido) => {
-    if (pedido.status === 'recusado') return acc;
-    acc[pedido.entrega.data] = (acc[pedido.entrega.data] ?? 0) + 1;
-    return acc;
-  }, {});
-}

@@ -1,51 +1,49 @@
-// Cartões compartilhados entre o resumo do cliente, o acompanhamento e o
-// detalhe do admin — as três telas descrevem o mesmo pedido.
+// Cartões compartilhados entre o acompanhamento do cliente e o detalhe do
+// admin — as duas telas descrevem o mesmo pedido.
 import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
+import { montarUrl } from '@/api/client';
+import type { PedidoApi } from '@/api/pedidos';
 import { Cartao } from '@/components/Cartao';
 import { LinhaResumo } from '@/components/LinhaResumo';
 import { Texto } from '@/components/Texto';
 import { diaDaSemana, formatarData, formatarMoeda } from '@divine/shared';
-import { descreverSelecoes } from '@divine/shared';
-import { TAXA_ENTREGA } from '@divine/shared';
 import { cores, espaco, raio } from '@/theme';
-import type { Pedido, Produto } from '@divine/shared';
-import { imagemDoProduto } from '@/data/imagens';
 
-export function BlocoProduto({
-  produto,
-  pedido,
-  fotoGrande = false,
-}: {
-  produto: Produto | undefined;
-  pedido: Pedido;
-  fotoGrande?: boolean;
-}) {
-  const { personalizacao } = pedido;
-  const selecoes = produto ? descreverSelecoes(produto, personalizacao) : [];
-
+/**
+ * As seleções vêm do próprio pedido, já com título e nome gravados no momento
+ * da compra. Resolver os títulos no catálogo de hoje faria um pedido antigo
+ * mudar de descrição quando a confeiteira renomeasse um grupo.
+ */
+export function BlocoProduto({ pedido, fotoGrande = false }: { pedido: PedidoApi; fotoGrande?: boolean }) {
   return (
     <Cartao style={styles.cartao}>
       <Texto peso="semibold">Produto</Texto>
 
       <View style={styles.produto}>
-        {produto ? <Image source={imagemDoProduto(produto.id)} style={styles.miniatura} contentFit="cover" /> : null}
+        <Image
+          source={
+            pedido.produtoImagemUrl
+              ? { uri: montarUrl(pedido.produtoImagemUrl) }
+              : require('@/assets/logomarca.jpg')
+          }
+          style={styles.miniatura}
+          contentFit="cover"
+        />
         <Texto peso="semibold" style={styles.nome}>
-          {produto?.nome ?? 'Produto removido do catálogo'}
+          {pedido.produtoNome}
         </Texto>
       </View>
 
-      {selecoes.map((s) => (
-        <LinhaResumo key={s.rotulo} rotulo={s.rotulo} valor={s.valor} />
+      {pedido.selecoes.map((s) => (
+        <LinhaResumo key={`${s.grupoTitulo}-${s.opcaoNome}`} rotulo={s.grupoTitulo} valor={s.opcaoNome} />
       ))}
-      <LinhaResumo rotulo="Quantidade" valor={String(personalizacao.quantidade)} />
-      {personalizacao.mensagem ? (
-        <LinhaResumo rotulo="Mensagem" valor={`“${personalizacao.mensagem}”`} />
-      ) : null}
+      <LinhaResumo rotulo="Quantidade" valor={String(pedido.quantidade)} />
+      {pedido.mensagem ? <LinhaResumo rotulo="Mensagem" valor={`“${pedido.mensagem}”`} /> : null}
 
-      {personalizacao.fotoUri ? (
+      {pedido.fotoUrl ? (
         <Image
-          source={{ uri: personalizacao.fotoUri }}
+          source={{ uri: montarUrl(pedido.fotoUrl) }}
           style={fotoGrande ? styles.fotoGrande : styles.fotoPequena}
           contentFit="cover"
         />
@@ -54,31 +52,34 @@ export function BlocoProduto({
   );
 }
 
-export function BlocoEntrega({ pedido }: { pedido: Pedido }) {
-  const { entrega } = pedido;
-
+export function BlocoEntrega({ pedido }: { pedido: PedidoApi }) {
   return (
     <Cartao style={styles.cartao}>
       <Texto peso="semibold">Entrega</Texto>
       <LinhaResumo
         rotulo="Como receber"
-        valor={entrega.tipo === 'entrega' ? 'Entrega' : 'Retirada na loja'}
+        valor={pedido.tipoEntrega === 'entrega' ? 'Entrega' : 'Retirada na loja'}
       />
-      <LinhaResumo rotulo="Data" valor={`${formatarData(entrega.data)} (${diaDaSemana(entrega.data)})`} />
-      <LinhaResumo rotulo="Horário" valor={entrega.hora} />
-      {entrega.tipo === 'entrega' ? <LinhaResumo rotulo="Endereço" valor={entrega.endereco} /> : null}
+      <LinhaResumo
+        rotulo="Data"
+        valor={`${formatarData(pedido.dataEntrega)} (${diaDaSemana(pedido.dataEntrega)})`}
+      />
+      <LinhaResumo rotulo="Horário" valor={pedido.horaEntrega} />
+      {pedido.endereco ? <LinhaResumo rotulo="Endereço" valor={pedido.endereco} /> : null}
     </Cartao>
   );
 }
 
-export function BlocoValores({ pedido }: { pedido: Pedido }) {
-  const taxa = pedido.entrega.tipo === 'entrega' ? TAXA_ENTREGA : 0;
-
+/**
+ * Os três valores vêm gravados no pedido, e não recalculados. Uma taxa de
+ * entrega que mudasse de valor reescreveria o histórico de todo mundo.
+ */
+export function BlocoValores({ pedido }: { pedido: PedidoApi }) {
   return (
     <Cartao style={styles.cartao}>
       <Texto peso="semibold">Valores</Texto>
-      <LinhaResumo rotulo="Subtotal" valor={formatarMoeda(pedido.total - taxa)} />
-      <LinhaResumo rotulo="Taxa de entrega" valor={formatarMoeda(taxa)} />
+      <LinhaResumo rotulo="Subtotal" valor={formatarMoeda(pedido.subtotal)} />
+      <LinhaResumo rotulo="Taxa de entrega" valor={formatarMoeda(pedido.taxaEntrega)} />
       <View style={styles.totalLinha}>
         <Texto variante="subtitulo" peso="bold">
           Total

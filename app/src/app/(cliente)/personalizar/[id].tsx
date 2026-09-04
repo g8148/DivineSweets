@@ -13,7 +13,7 @@ import { SeletorQuantidade } from '@/components/SeletorQuantidade';
 import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
 import { Camera, Images } from '@/components/icones';
-import { calcularSubtotalDeGrupos } from '@divine/shared';
+import { calcularSubtotal } from '@divine/shared';
 import { useRascunho } from '@/state/RascunhoPedidoContext';
 import { cores, espaco, raio } from '@/theme';
 
@@ -51,7 +51,7 @@ export default function Personalizar() {
   // ao toque sem esperar a rede — mas a partir dos deltas do banco, e não dos
   // congelados no código, senão o total mostrado divergiria do cobrado.
   const grupos = produto.grupos;
-  const subtotal = calcularSubtotalDeGrupos(produto, rascunho);
+  const subtotal = calcularSubtotal(produto, rascunho);
 
   async function tirarFoto() {
     const permissao = await ImagePicker.requestCameraPermissionsAsync();

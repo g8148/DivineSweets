@@ -40,15 +40,3 @@ export function useCriarPedido() {
     },
   });
 }
-
-export function useEnviarFoto() {
-  return useMutation({
-    mutationFn: (uri: string) => {
-      const form = new FormData();
-      // O React Native aceita este objeto no lugar de um File; o servidor
-      // reconverte para WebP e ignora o nome e o tipo declarados aqui.
-      form.append('arquivo', { uri, name: 'referencia.jpg', type: 'image/jpeg' } as never);
-      return apiFetch<{ url: string }>('/api/upload', { method: 'POST', body: form });
-    },
-  });
-}

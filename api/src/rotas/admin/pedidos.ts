@@ -33,6 +33,25 @@ export const rotasAdminPedidos = new Hono<{ Variables: Variables }>()
     }),
     async (c) => c.json(await listarTodosPedidos(c.req.valid('query').status)),
   )
+  .get(
+    '/:id',
+    describeRoute({
+      description:
+        'Detalha qualquer pedido. A rota do cliente filtra pelo dono e responderia 404 para a administração — que precisa justamente ver o pedido dos outros.',
+      responses: {
+        200: {
+          description: 'Pedido',
+          content: { 'application/json': { schema: resolver(pedidoSchema) } },
+        },
+        404: { description: 'Pedido não encontrado' },
+      },
+    }),
+    async (c) => {
+      const pedido = await buscarPedido(c.req.param('id'));
+      if (!pedido) throw new ErroApi(404, 'Pedido não encontrado', 'nao_encontrado');
+      return c.json(pedido);
+    },
+  )
   .patch(
     '/:id',
     describeRoute({

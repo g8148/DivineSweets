@@ -1,31 +1,50 @@
 import { useMemo } from 'react';
 import { router } from 'expo-router';
-import { SectionList, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, SectionList, StyleSheet, View } from 'react-native';
+import { useMeusPedidos } from '@/api/pedidos';
 import { Cabecalho } from '@/components/Cabecalho';
 import { CardPedido } from '@/components/CardPedido';
 import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
-import { useAuth } from '@/state/AuthContext';
-import { usePedidos } from '@/state/PedidosContext';
 import { cores, espaco } from '@/theme';
-import type { Pedido } from '@divine/shared';
+import type { StatusPedido } from '@divine/shared';
 
-const EM_ANDAMENTO: Pedido['status'][] = ['recebido', 'producao', 'pronto'];
+const EM_ANDAMENTO: StatusPedido[] = ['recebido', 'producao', 'pronto'];
 
 export default function MeusPedidos() {
-  const { pedidos } = usePedidos();
-  const { usuario } = useAuth();
+  // A lista já vem só com os pedidos de quem está logado: o filtro é do SQL,
+  // pelo dono da sessão. Comparar nomes no aparelho, como fazia o protótipo,
+  // misturaria os pedidos de dois clientes homônimos.
+  const { data: pedidos, isPending, isError, refetch, isRefetching } = useMeusPedidos();
 
   const secoes = useMemo(() => {
-    const meus = pedidos.filter((p) => p.clienteNome === usuario?.nome);
-    const andamento = meus.filter((p) => EM_ANDAMENTO.includes(p.status));
-    const historico = meus.filter((p) => !EM_ANDAMENTO.includes(p.status));
-
+    const todos = pedidos ?? [];
     return [
-      { title: 'Em andamento', data: andamento },
-      { title: 'Histórico', data: historico },
+      { title: 'Em andamento', data: todos.filter((p) => EM_ANDAMENTO.includes(p.status)) },
+      { title: 'Histórico', data: todos.filter((p) => !EM_ANDAMENTO.includes(p.status)) },
     ].filter((secao) => secao.data.length > 0);
-  }, [pedidos, usuario]);
+  }, [pedidos]);
+
+  if (isPending) {
+    return (
+      <View style={styles.tela}>
+        <Cabecalho titulo="Meus Pedidos" />
+        <ActivityIndicator color={cores.vinho} style={styles.carregando} />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={styles.tela}>
+        <Cabecalho titulo="Meus Pedidos" />
+        <Vazio
+          mensagem="Não foi possível carregar seus pedidos. Verifique sua conexão."
+          acao={{ rotulo: 'Tentar novamente', aoTocar: () => refetch() }}
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.tela}>
@@ -35,6 +54,10 @@ export default function MeusPedidos() {
         sections={secoes}
         keyExtractor={(pedido) => pedido.id}
         contentContainerStyle={styles.lista}
+        // Puxar para atualizar é como o cliente confere se o status andou: quem
+        // muda o pedido é a confeiteira, do outro lado.
+        refreshing={isRefetching}
+        onRefresh={refetch}
         renderSectionHeader={({ section }) => (
           <Texto peso="semibold" style={styles.secao}>
             {section.title}
@@ -53,6 +76,7 @@ export default function MeusPedidos() {
 
 const styles = StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.branco },
+  carregando: { marginTop: espaco.xl },
   lista: { padding: espaco.md, gap: espaco.md },
   secao: {
     backgroundColor: cores.rosaClaro,

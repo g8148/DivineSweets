@@ -1,12 +1,12 @@
 import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
+import { montarUrl } from '@/api/client';
+import type { PedidoApi } from '@/api/pedidos';
 import { Cartao } from '@/components/Cartao';
 import { Texto } from '@/components/Texto';
 import { formatarData, formatarMoeda } from '@divine/shared';
-import { buscarProduto } from '@divine/shared';
 import { cores, espaco, raio } from '@/theme';
-import type { Pedido, StatusPedido } from '@divine/shared';
-import { imagemDoProduto } from '@/data/imagens';
+import type { StatusPedido } from '@divine/shared';
 
 export const CORES_STATUS: Record<StatusPedido, { fundo: string; texto: string; rotulo: string }> = {
   recebido: { fundo: cores.rosaCreme, texto: cores.vinho, rotulo: 'Recebido' },
@@ -17,26 +17,33 @@ export const CORES_STATUS: Record<StatusPedido, { fundo: string; texto: string; 
 };
 
 type Props = {
-  pedido: Pedido;
+  pedido: PedidoApi;
   onPress: () => void;
   /** No painel admin a linha principal é o cliente, não o produto. */
   mostrarCliente?: boolean;
 };
 
 export function CardPedido({ pedido, onPress, mostrarCliente = false }: Props) {
-  const produto = buscarProduto(pedido.personalizacao.produtoId);
   const status = CORES_STATUS[pedido.status];
 
   return (
     <Cartao onPress={onPress} style={styles.cartao}>
-      {produto ? <Image source={imagemDoProduto(produto.id)} style={styles.miniatura} contentFit="cover" /> : null}
+      <Image
+        source={
+          pedido.produtoImagemUrl
+            ? { uri: montarUrl(pedido.produtoImagemUrl) }
+            : require('@/assets/logomarca.jpg')
+        }
+        style={styles.miniatura}
+        contentFit="cover"
+      />
 
       <View style={styles.centro}>
         <Texto peso="semibold" numberOfLines={1}>
-          {mostrarCliente ? pedido.clienteNome : (produto?.nome ?? 'Produto removido')}
+          {mostrarCliente ? pedido.clienteNome : pedido.produtoNome}
         </Texto>
         <Texto variante="legenda" cor={cores.cinzaEscuro} numberOfLines={1}>
-          {mostrarCliente ? (produto?.nome ?? 'Produto removido') : `Entrega em ${formatarData(pedido.entrega.data)}`}
+          {mostrarCliente ? pedido.produtoNome : `Entrega em ${formatarData(pedido.dataEntrega)}`}
         </Texto>
         <Texto peso="bold" cor={cores.vinho}>
           {formatarMoeda(pedido.total)}

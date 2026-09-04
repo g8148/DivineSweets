@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAdminPedido, useAtualizarStatus } from '@/api/admin';
 import { BlocoEntrega, BlocoProduto, BlocoValores } from '@/components/BlocosPedido';
 import { Botao } from '@/components/Botao';
 import { Cabecalho } from '@/components/Cabecalho';
@@ -13,7 +14,7 @@ import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
 import { Phone } from '@/components/icones';
 import { numeroPedido } from '@divine/shared';
-import { usePedidos } from '@/state/PedidosContext';
+import { ORDEM_STATUS } from '@/data/status';
 import { cores, espaco, raio } from '@/theme';
 import type { StatusPedido } from '@divine/shared';
 
@@ -25,37 +26,65 @@ const PROXIMO_PASSO: Partial<Record<StatusPedido, string>> = {
 
 export default function DetalhePedidoAdmin() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { pedidos, produtosAdmin, avancarStatus, recusarPedido } = usePedidos();
+  const { data: pedido, isPending, isError, refetch } = useAdminPedido(id);
+  const atualizar = useAtualizarStatus();
   const insets = useSafeAreaInsets();
 
   const [modalAberto, setModalAberto] = useState(false);
   const [motivo, setMotivo] = useState('');
   const [erroMotivo, setErroMotivo] = useState('');
+  const [aviso, setAviso] = useState('');
 
-  const pedido = pedidos.find((p) => p.id === id);
-
-  if (!pedido) {
+  if (isPending) {
     return (
       <View style={styles.tela}>
         <Cabecalho titulo="Pedido" comVoltar />
-        <Vazio mensagem="Pedido não encontrado." />
+        <ActivityIndicator color={cores.vinho} style={styles.carregando} />
       </View>
     );
   }
 
-  const produto = produtosAdmin.find((p) => p.id === pedido.personalizacao.produtoId);
+  if (isError || !pedido) {
+    return (
+      <View style={styles.tela}>
+        <Cabecalho titulo="Pedido" comVoltar />
+        <Vazio
+          mensagem="Não foi possível carregar este pedido."
+          acao={{ rotulo: 'Tentar novamente', aoTocar: () => refetch() }}
+        />
+      </View>
+    );
+  }
+
   const rotuloAvancar = PROXIMO_PASSO[pedido.status];
   const podeRecusar = pedido.status === 'recebido';
 
-  function confirmarRecusa() {
+  async function mudarStatus(status: StatusPedido, motivoRecusa?: string) {
+    setAviso('');
+    try {
+      await atualizar.mutateAsync({ id, status, motivoRecusa });
+    } catch (erro) {
+      setAviso(erro instanceof Error ? erro.message : 'Não foi possível mudar o status');
+    }
+  }
+
+  function avancar() {
+    if (!pedido) return;
+    const proximo = ORDEM_STATUS[ORDEM_STATUS.indexOf(pedido.status) + 1];
+    if (proximo) void mudarStatus(proximo);
+  }
+
+  async function confirmarRecusa() {
+    // O servidor também exige o motivo; conferir aqui evita a ida de rede e dá
+    // o erro ao lado do campo, e não numa faixa no rodapé.
     if (!motivo.trim()) {
       setErroMotivo('Informe o motivo da recusa');
       return;
     }
-    recusarPedido(pedido!.id, motivo.trim());
+    setErroMotivo('');
+    await mudarStatus('recusado', motivo.trim());
     setModalAberto(false);
     setMotivo('');
-    setErroMotivo('');
   }
 
   return (
@@ -84,16 +113,32 @@ export default function DetalhePedidoAdmin() {
           ) : null}
         </Cartao>
 
-        <BlocoProduto produto={produto} pedido={pedido} fotoGrande />
+        <BlocoProduto pedido={pedido} fotoGrande />
         <BlocoEntrega pedido={pedido} />
         <BlocoValores pedido={pedido} />
       </ScrollView>
 
       {(rotuloAvancar || podeRecusar) && (
         <View style={[styles.rodape, { paddingBottom: espaco.md + insets.bottom }]}>
-          {rotuloAvancar ? <Botao titulo={rotuloAvancar} onPress={() => avancarStatus(pedido.id)} /> : null}
+          {aviso ? (
+            <Texto variante="legenda" cor={cores.alertaTexto}>
+              {aviso}
+            </Texto>
+          ) : null}
+          {rotuloAvancar ? (
+            <Botao
+              titulo={atualizar.isPending ? 'Salvando…' : rotuloAvancar}
+              onPress={avancar}
+              desabilitado={atualizar.isPending}
+            />
+          ) : null}
           {podeRecusar ? (
-            <Botao titulo="Recusar pedido" variante="perigo" onPress={() => setModalAberto(true)} />
+            <Botao
+              titulo="Recusar pedido"
+              variante="perigo"
+              desabilitado={atualizar.isPending}
+              onPress={() => setModalAberto(true)}
+            />
           ) : null}
         </View>
       )}
@@ -104,6 +149,9 @@ export default function DetalhePedidoAdmin() {
             <Texto variante="subtitulo" peso="bold">
               Recusar pedido
             </Texto>
+            <Texto variante="legenda" cor={cores.cinzaEscuro}>
+              O cliente vê este texto na tela de acompanhamento.
+            </Texto>
             <Campo
               rotulo="Motivo da recusa"
               valor={motivo}
@@ -112,7 +160,12 @@ export default function DetalhePedidoAdmin() {
               placeholder="Ex.: agenda lotada nessa data"
               multilinha
             />
-            <Botao titulo="Confirmar recusa" variante="perigo" onPress={confirmarRecusa} />
+            <Botao
+              titulo={atualizar.isPending ? 'Salvando…' : 'Confirmar recusa'}
+              variante="perigo"
+              desabilitado={atualizar.isPending}
+              onPress={confirmarRecusa}
+            />
             <Botao titulo="Cancelar" variante="secundario" onPress={() => setModalAberto(false)} />
           </View>
         </View>
@@ -125,6 +178,7 @@ const styles = StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.branco },
   conteudo: { padding: espaco.md, gap: espaco.md, paddingBottom: 160 },
   cartao: { padding: espaco.md },
+  carregando: { marginTop: espaco.xl },
   clienteLinha: { flexDirection: 'row', alignItems: 'center', gap: espaco.md },
   clienteDados: { flex: 1 },
   telefone: {

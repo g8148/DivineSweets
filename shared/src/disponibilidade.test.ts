@@ -2,8 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   ANTECEDENCIA_MINIMA_HORAS,
-  contarOcupacao,
-  dataDisponivel,
   motivoIndisponivel,
 } from './disponibilidade.ts';
 import type { Agenda } from './tipos.ts';
@@ -43,19 +41,4 @@ test('dia abaixo do limite continua disponível', () => {
 
 test('bloqueio manual tem precedência sobre lotação', () => {
   assert.strictEqual(motivoIndisponivel('2026-08-20', agenda, { '2026-08-20': 3 }, AGORA), 'bloqueada');
-});
-
-test('dataDisponivel é o inverso de haver motivo', () => {
-  assert.strictEqual(dataDisponivel('2026-08-15', agenda, semOcupacao, AGORA), true);
-  assert.strictEqual(dataDisponivel('2026-08-20', agenda, semOcupacao, AGORA), false);
-});
-
-test('contarOcupacao agrupa por data e ignora recusados', () => {
-  const pedidos = [
-    { entrega: { data: '2026-08-18' }, status: 'recebido' },
-    { entrega: { data: '2026-08-18' }, status: 'producao' },
-    { entrega: { data: '2026-08-18' }, status: 'recusado' },
-    { entrega: { data: '2026-08-19' }, status: 'entregue' },
-  ];
-  assert.deepStrictEqual(contarOcupacao(pedidos), { '2026-08-18': 2, '2026-08-19': 1 });
 });

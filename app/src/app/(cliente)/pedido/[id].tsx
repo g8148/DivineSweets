@@ -1,5 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { usePedido } from '@/api/pedidos';
 import { BlocoEntrega, BlocoProduto, BlocoValores } from '@/components/BlocosPedido';
 import { Cabecalho } from '@/components/Cabecalho';
 import { Cartao } from '@/components/Cartao';
@@ -9,7 +10,6 @@ import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
 import { Bell } from '@/components/icones';
 import { numeroPedido } from '@divine/shared';
-import { usePedidos } from '@/state/PedidosContext';
 import { cores, espaco, raio } from '@/theme';
 import type { StatusPedido } from '@divine/shared';
 
@@ -22,20 +22,29 @@ const AVISOS: Record<Exclude<StatusPedido, 'recusado'>, string> = {
 
 export default function AcompanharPedido() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { pedidos, produtosAdmin } = usePedidos();
+  const { data: pedido, isPending, isError, refetch } = usePedido(id);
 
-  const pedido = pedidos.find((p) => p.id === id);
-
-  if (!pedido) {
+  if (isPending) {
     return (
       <View style={styles.tela}>
         <Cabecalho titulo="Pedido" comVoltar />
-        <Vazio mensagem="Pedido não encontrado." />
+        <ActivityIndicator color={cores.vinho} style={styles.carregando} />
       </View>
     );
   }
 
-  const produto = produtosAdmin.find((p) => p.id === pedido.personalizacao.produtoId);
+  if (isError || !pedido) {
+    return (
+      <View style={styles.tela}>
+        <Cabecalho titulo="Pedido" comVoltar />
+        <Vazio
+          mensagem="Não foi possível carregar este pedido."
+          acao={{ rotulo: 'Tentar novamente', aoTocar: () => refetch() }}
+        />
+      </View>
+    );
+  }
+
   const recusado = pedido.status === 'recusado';
 
   return (
@@ -56,7 +65,7 @@ export default function AcompanharPedido() {
           </Texto>
         </View>
 
-        <BlocoProduto produto={produto} pedido={pedido} />
+        <BlocoProduto pedido={pedido} />
         <BlocoEntrega pedido={pedido} />
 
         <Cartao style={styles.cartao}>
@@ -74,6 +83,7 @@ export default function AcompanharPedido() {
 const styles = StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.branco },
   conteudo: { padding: espaco.md, gap: espaco.md },
+  carregando: { marginTop: espaco.xl },
   cartao: { padding: espaco.md },
   aviso: {
     flexDirection: 'row',

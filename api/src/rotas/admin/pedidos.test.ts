@@ -9,7 +9,7 @@ const app = criarApp();
 // Mês próprio: os arquivos de teste rodam em processos paralelos e a agenda
 // aceita 5 pedidos por dia. Agenda usa outubro, leitura novembro, criação
 // dezembro; a administração fica com janeiro.
-const DATA = { lista: '2027-01-10', status: '2027-01-12', recusa: '2027-01-14' };
+const DATA = { lista: '2027-01-10', status: '2027-01-12', recusa: '2027-01-14', detalhe: '2027-01-16' };
 
 after(limparUsuariosDeTeste);
 
@@ -147,4 +147,31 @@ test('pedido inexistente responde 404', async () => {
   const admin = await autenticar('admin');
   const res = await mudar('nao-existe', admin.Cookie, { status: 'pronto' });
   assert.equal(res.status, 404);
+});
+
+// A administração precisa abrir o pedido de outra pessoa — é o trabalho dela.
+// Pela rota do cliente, que filtra pelo dono, isso responderia 404.
+test('o admin abre o detalhe de um pedido que não é dele', async () => {
+  const admin = await autenticar('admin');
+  const cliente = await autenticar('cliente', 'dono-do-detalhe-admin');
+  const pedido = await pedidoDeTeste(cliente.Cookie, DATA.detalhe);
+
+  const pelaRotaDoCliente = await app.request(`/api/pedidos/${pedido.id}`, {
+    headers: { Cookie: admin.Cookie },
+  });
+  assert.strictEqual(pelaRotaDoCliente.status, 404, 'a rota do cliente não pode servir a administração');
+
+  const res = await app.request(`/api/admin/pedidos/${pedido.id}`, {
+    headers: { Cookie: admin.Cookie },
+  });
+  const corpo = await res.json();
+  assert.strictEqual(res.status, 200, JSON.stringify(corpo));
+  assert.strictEqual(corpo.id, pedido.id);
+  assert.strictEqual(corpo.clienteNome, 'Teste');
+});
+
+test('cliente comum não abre o detalhe pela rota administrativa', async () => {
+  const cliente = await autenticar('cliente');
+  const res = await app.request('/api/admin/pedidos/qualquer-id', { headers: { Cookie: cliente.Cookie } });
+  assert.strictEqual(res.status, 403);
 });

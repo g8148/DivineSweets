@@ -3,7 +3,8 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { ApiError, montarUrl } from '@/api/client';
-import { useCriarPedido, useEnviarFoto } from '@/api/pedidos';
+import { useCriarPedido } from '@/api/pedidos';
+import { useEnviarImagem } from '@/api/upload';
 import { useProduto } from '@/api/produtos';
 import { useAuth } from '@/auth/useAuth';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,7 +18,7 @@ import { Vazio } from '@/components/Vazio';
 import { Copy } from '@/components/icones';
 import { diaDaSemana, formatarData, formatarMoeda } from '@divine/shared';
 import { descreverSelecoesDeGrupos } from '@divine/shared';
-import { calcularSubtotalDeGrupos, calcularTotalDeGrupos, TAXA_ENTREGA } from '@divine/shared';
+import { calcularSubtotal, calcularTotal, TAXA_ENTREGA } from '@divine/shared';
 import { useRascunho } from '@/state/RascunhoPedidoContext';
 import { cores, espaco, raio } from '@/theme';
 
@@ -29,7 +30,7 @@ export default function Resumo() {
   const { data: produto, isPending: carregandoProduto } = useProduto(rascunho?.produtoId ?? '');
   const { usuario } = useAuth();
   const criar = useCriarPedido();
-  const enviarFoto = useEnviarFoto();
+  const enviarFoto = useEnviarImagem();
   const insets = useSafeAreaInsets();
 
   const [pagamento, setPagamento] = useState<'pix' | 'entrega'>('pix');
@@ -72,9 +73,9 @@ export default function Resumo() {
 
   // Os valores aqui são só para conferência: quem calcula o que será cobrado é
   // o servidor, a partir do próprio catálogo. Se divergirem, quem vale é ele.
-  const subtotal = calcularSubtotalDeGrupos(produto, rascunho);
+  const subtotal = calcularSubtotal(produto, rascunho);
   const taxa = entrega.tipo === 'entrega' ? TAXA_ENTREGA : 0;
-  const total = calcularTotalDeGrupos(produto, rascunho, entrega.tipo);
+  const total = calcularTotal(produto, rascunho, entrega.tipo);
   const selecoes = descreverSelecoesDeGrupos(produto.grupos, rascunho.selecoes);
   const enviando = criar.isPending || enviarFoto.isPending;
 

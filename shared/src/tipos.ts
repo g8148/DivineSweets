@@ -41,27 +41,9 @@ export type Entrega = {
 
 export type StatusPedido = 'recebido' | 'producao' | 'pronto' | 'entregue' | 'recusado';
 
-export type Pedido = {
-  id: string;
-  clienteNome: string;
-  clienteTelefone: string;
-  personalizacao: Personalizacao;
-  entrega: Entrega;
-  total: number;
-  status: StatusPedido;
-  criadoEm: string;
-  motivoRecusa?: string;
-};
-
-export type Perfil = 'cliente' | 'admin';
-
-export type Usuario = {
-  nome: string;
-  email: string;
-  telefone: string;
-  perfil: Perfil;
-  enderecos: string[];
-};
+// O pedido em si não é tipado aqui: o formato que vale é o `pedidoSchema` de
+// `schemas.ts`, que é o mesmo que a API publica. Um segundo tipo de pedido neste
+// arquivo seria uma cópia divergindo em silêncio.
 
 export type Agenda = {
   datasBloqueadas: string[];

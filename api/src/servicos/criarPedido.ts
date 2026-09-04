@@ -138,6 +138,7 @@ export async function criarPedido(usuario: Usuario, dados: CriarPedido) {
       pedido,
       snapshot.map(({ grupoTitulo, opcaoNome, delta }) => ({ grupoTitulo, opcaoNome, delta })),
       { nome: usuario.nome, telefone: usuario.telefone },
+      produto.imagemUrl,
     );
   });
 }

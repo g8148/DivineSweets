@@ -1,54 +1,64 @@
 import { useState } from 'react';
 import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useGruposDeOpcoes, useSalvarProduto } from '@/api/admin';
+import { montarUrl } from '@/api/client';
+import { useProduto } from '@/api/produtos';
+import { useEnviarImagem } from '@/api/upload';
 import { Botao } from '@/components/Botao';
 import { Cabecalho } from '@/components/Cabecalho';
 import { Campo } from '@/components/Campo';
 import { Cartao } from '@/components/Cartao';
 import { Chip } from '@/components/Chip';
 import { Texto } from '@/components/Texto';
-import { grupos } from '@divine/shared';
 import { categorias } from '@divine/shared';
-import { usePedidos } from '@/state/PedidosContext';
 import { cores, espaco, raio } from '@/theme';
 import type { Categoria } from '@divine/shared';
-import { imagemDoProduto } from '@/data/imagens';
-
-// O bundler resolve `require` estaticamente, então um produto criado no protótipo
-// não tem como apontar para um arquivo novo. Ele herda esta imagem.
-const IMAGEM_PADRAO = require('@/assets/produtos/decorado.jpg');
-
-function paraKebab(texto: string): string {
-  return texto
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
 
 export default function FormularioProduto() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { produtosAdmin, salvarProduto } = usePedidos();
+  const criando = id === 'novo';
+
+  // A administração precisa abrir também o produto desativado, e é por isso que
+  // esta consulta usa o detalhe público só quando o produto está à venda; o
+  // caminho de edição parte da listagem administrativa, que já traz os dois.
+  const { data: existente, isPending: carregando } = useProduto(criando ? '' : id);
+  const grupos = useGruposDeOpcoes();
+  const salvarProduto = useSalvarProduto();
+  const enviarImagem = useEnviarImagem();
   const insets = useSafeAreaInsets();
 
-  const criando = id === 'novo';
-  const existente = criando ? undefined : produtosAdmin.find((p) => p.id === id);
-
-  const [nome, setNome] = useState(existente?.nome ?? '');
-  const [descricao, setDescricao] = useState(existente?.descricao ?? '');
-  // O campo é digitado em reais; o domínio guarda centavos.
-  const [preco, setPreco] = useState(existente ? (existente.precoBase / 100).toFixed(2).replace('.', ',') : '');
-  const [categoria, setCategoria] = useState<Categoria>(existente?.categoria ?? 'cookies');
-  const [gruposIds, setGruposIds] = useState<string[]>(existente?.gruposIds ?? []);
-  const [permiteMensagem, setPermiteMensagem] = useState(existente?.permiteMensagem ?? false);
-  const [permiteFoto, setPermiteFoto] = useState(existente?.permiteFoto ?? false);
+  const [pronto, setPronto] = useState(false);
+  const [nome, setNome] = useState('');
+  const [descricao, setDescricao] = useState('');
+  // O campo é digitado em reais; a API recebe centavos.
+  const [preco, setPreco] = useState('');
+  const [categoria, setCategoria] = useState<Categoria>('cookies');
+  const [gruposIds, setGruposIds] = useState<string[]>([]);
+  const [permiteMensagem, setPermiteMensagem] = useState(false);
+  const [permiteFoto, setPermiteFoto] = useState(false);
+  const [imagemUrl, setImagemUrl] = useState<string | null>(null);
 
   const [erroNome, setErroNome] = useState('');
   const [erroPreco, setErroPreco] = useState('');
-  const [erroGrupos, setErroGrupos] = useState('');
+  const [aviso, setAviso] = useState('');
+
+  // Uma vez só, quando o produto chega: preencher a cada render descartaria o
+  // que a confeiteira estivesse digitando.
+  if (!criando && existente && !pronto) {
+    setPronto(true);
+    setNome(existente.nome);
+    setDescricao(existente.descricao);
+    setPreco((existente.precoBase / 100).toFixed(2).replace('.', ','));
+    setCategoria(existente.categoria);
+    setGruposIds(existente.grupos.map((g) => g.id));
+    setPermiteMensagem(existente.permiteMensagem);
+    setPermiteFoto(existente.permiteFoto);
+    setImagemUrl(existente.imagemUrl);
+  }
 
   function alternarGrupo(grupoId: string) {
     setGruposIds((atuais) =>
@@ -56,33 +66,68 @@ export default function FormularioProduto() {
     );
   }
 
-  function salvar() {
+  async function trocarImagem() {
+    const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissao.granted) {
+      setAviso('Precisamos do acesso às fotos para trocar a imagem do produto.');
+      return;
+    }
+    const resultado = await ImagePicker.launchImageLibraryAsync({ quality: 0.8 });
+    if (resultado.canceled) return;
+
+    setAviso('');
+    try {
+      // A imagem sobe agora e o produto guarda só o caminho. Assim o formulário
+      // já mostra a foto definitiva, servida pela API, e não a do aparelho.
+      const { url } = await enviarImagem.mutateAsync(resultado.assets[0].uri);
+      setImagemUrl(url);
+    } catch (erro) {
+      setAviso(erro instanceof Error ? erro.message : 'Não foi possível enviar a imagem');
+    }
+  }
+
+  async function salvar() {
     const precoNumero = Math.round(Number(preco.replace(',', '.')) * 100);
 
     const problemaNome = nome.trim() ? '' : 'Informe o nome';
     const problemaPreco =
       !Number.isFinite(precoNumero) || precoNumero <= 0 ? 'Informe um preço válido' : '';
-    const problemaGrupos =
-      gruposIds.length === 0 ? 'Escolha pelo menos um grupo de personalização' : '';
 
     setErroNome(problemaNome);
     setErroPreco(problemaPreco);
-    setErroGrupos(problemaGrupos);
-    if (problemaNome || problemaPreco || problemaGrupos) return;
+    setAviso('');
+    if (problemaNome || problemaPreco) return;
 
-    salvarProduto({
-      id: existente?.id ?? `${paraKebab(nome)}-${Date.now()}`,
-      nome: nome.trim(),
-      categoria,
-      descricao: descricao.trim(),
-      precoBase: precoNumero,
-      gruposIds,
-      permiteMensagem,
-      permiteFoto,
-    });
-
-    router.back();
+    try {
+      await salvarProduto.mutateAsync({
+        id: criando ? undefined : id,
+        dados: {
+          nome: nome.trim(),
+          categoria,
+          descricao: descricao.trim(),
+          precoBase: precoNumero,
+          gruposIds,
+          permiteMensagem,
+          permiteFoto,
+          ...(imagemUrl ? { imagemUrl } : {}),
+        },
+      });
+      router.back();
+    } catch (erro) {
+      setAviso(erro instanceof Error ? erro.message : 'Não foi possível salvar o produto');
+    }
   }
+
+  if (!criando && carregando) {
+    return (
+      <View style={styles.tela}>
+        <Cabecalho titulo="Editar produto" comVoltar />
+        <ActivityIndicator color={cores.vinho} style={styles.carregando} />
+      </View>
+    );
+  }
+
+  const enviando = salvarProduto.isPending || enviarImagem.isPending;
 
   return (
     <View style={styles.tela}>
@@ -90,10 +135,17 @@ export default function FormularioProduto() {
 
       <ScrollView contentContainerStyle={styles.conteudo}>
         <Cartao style={styles.cartao}>
-          <Image source={existente ? imagemDoProduto(existente.id) : IMAGEM_PADRAO} style={styles.foto} contentFit="cover" />
-          <Texto variante="legenda" cor={cores.cinzaEscuro}>
-            A troca de imagem não está disponível neste protótipo.
-          </Texto>
+          <Image
+            source={imagemUrl ? { uri: montarUrl(imagemUrl) } : require('@/assets/logomarca.jpg')}
+            style={styles.foto}
+            contentFit="cover"
+          />
+          <Botao
+            titulo={enviarImagem.isPending ? 'Enviando…' : 'Escolher imagem'}
+            variante="secundario"
+            desabilitado={enviarImagem.isPending}
+            onPress={trocarImagem}
+          />
         </Cartao>
 
         <Cartao style={styles.cartao}>
@@ -131,21 +183,23 @@ export default function FormularioProduto() {
 
         <Cartao style={styles.cartao}>
           <Texto peso="semibold">Grupos de personalização</Texto>
-          <View style={styles.opcoes}>
-            {Object.values(grupos).map((grupo) => (
-              <Chip
-                key={grupo.id}
-                rotulo={grupo.titulo}
-                selecionado={gruposIds.includes(grupo.id)}
-                onPress={() => alternarGrupo(grupo.id)}
-              />
-            ))}
-          </View>
-          {erroGrupos ? (
-            <Texto variante="legenda" cor={cores.alertaTexto}>
-              {erroGrupos}
-            </Texto>
-          ) : null}
+          {/* Os grupos vêm do banco, e não do catálogo do código: a API confere
+              cada id contra a tabela e recusaria um que só existisse aqui. */}
+          {grupos.isPending ? (
+            <ActivityIndicator color={cores.vinho} style={styles.carregandoGrupos} />
+          ) : (
+            <View style={styles.opcoes}>
+              {(grupos.data ?? []).map((grupo) => (
+                <Chip
+                  key={grupo.id}
+                  rotulo={grupo.titulo}
+                  detalhe={grupo.obrigatorio ? 'obrigatório' : undefined}
+                  selecionado={gruposIds.includes(grupo.id)}
+                  onPress={() => alternarGrupo(grupo.id)}
+                />
+              ))}
+            </View>
+          )}
         </Cartao>
 
         <Cartao style={styles.cartao}>
@@ -168,10 +222,20 @@ export default function FormularioProduto() {
             />
           </View>
         </Cartao>
+
+        {aviso ? (
+          <Texto variante="legenda" cor={cores.alertaTexto}>
+            {aviso}
+          </Texto>
+        ) : null}
       </ScrollView>
 
       <View style={[styles.rodape, { paddingBottom: espaco.md + insets.bottom }]}>
-        <Botao titulo={criando ? 'Criar produto' : 'Salvar alterações'} onPress={salvar} />
+        <Botao
+          titulo={enviando ? 'Salvando…' : criando ? 'Criar produto' : 'Salvar alterações'}
+          onPress={salvar}
+          desabilitado={enviando}
+        />
       </View>
     </View>
   );
@@ -181,6 +245,8 @@ const styles = StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.branco },
   conteudo: { padding: espaco.md, gap: espaco.md, paddingBottom: 110 },
   cartao: { padding: espaco.md, gap: espaco.sm },
+  carregando: { marginTop: espaco.xl },
+  carregandoGrupos: { alignSelf: 'flex-start', paddingVertical: espaco.sm },
   foto: { width: '100%', height: 160, borderRadius: raio.md },
   opcoes: { flexDirection: 'row', flexWrap: 'wrap', gap: espaco.sm },
   linhaSwitch: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

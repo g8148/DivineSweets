@@ -95,6 +95,9 @@ export const pedidoSchema = z.object({
   id: z.string(),
   produtoId: z.string(),
   produtoNome: z.string(),
+  // Ilustração do card, e não instantâneo: o nome fica congelado no momento da
+  // compra, a foto acompanha o catálogo.
+  produtoImagemUrl: z.string().nullable(),
   quantidade: z.number().int(),
   selecoes: z.array(selecaoSchema),
   mensagem: z.string().nullable(),

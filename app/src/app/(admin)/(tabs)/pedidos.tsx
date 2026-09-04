@@ -1,16 +1,17 @@
 import { useMemo, useState } from 'react';
 import { router } from 'expo-router';
-import { Pressable, ScrollView, SectionList, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, SectionList, StyleSheet, View } from 'react-native';
+import { useAdminPedidos } from '@/api/admin';
+import type { PedidoApi } from '@/api/pedidos';
+import { useAuth } from '@/auth/useAuth';
 import { Cabecalho } from '@/components/Cabecalho';
 import { CardPedido } from '@/components/CardPedido';
 import { Chip } from '@/components/Chip';
 import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
 import { diaDaSemana, formatarData } from '@divine/shared';
-import { useAuth } from '@/state/AuthContext';
-import { usePedidos } from '@/state/PedidosContext';
 import { cores, espaco } from '@/theme';
-import type { Pedido, StatusPedido } from '@divine/shared';
+import type { StatusPedido } from '@divine/shared';
 
 const FILTROS: { id: StatusPedido | 'todos'; rotulo: string }[] = [
   { id: 'todos', rotulo: 'Todos' },
@@ -21,42 +22,53 @@ const FILTROS: { id: StatusPedido | 'todos'; rotulo: string }[] = [
 ];
 
 export default function PainelPedidos() {
-  const { pedidos } = usePedidos();
-  const { sair } = useAuth();
   const [filtro, setFiltro] = useState<StatusPedido | 'todos'>('todos');
+  // O filtro vai ao servidor: a lista cresce sem limite, e trazer tudo para
+  // filtrar no aparelho pesaria justo no dia mais movimentado.
+  const { data: pedidos, isPending, isError, refetch, isRefetching } = useAdminPedidos(
+    filtro === 'todos' ? undefined : filtro,
+  );
+  const { sair } = useAuth();
 
-  function sairDaConta() {
-    sair();
+  async function sairDaConta() {
+    await sair();
     router.replace('/(auth)/login');
   }
 
-  const ativos = pedidos.filter((p) => p.status !== 'entregue' && p.status !== 'recusado').length;
+  const ativos = (pedidos ?? []).filter(
+    (p) => p.status !== 'entregue' && p.status !== 'recusado',
+  ).length;
 
+  // Agrupado por data de entrega: é a pergunta que a confeiteira faz ao abrir o
+  // painel — o que precisa sair hoje, e o que sai depois.
   const secoes = useMemo(() => {
-    const visiveis = pedidos.filter((p) => filtro === 'todos' || p.status === filtro);
-    const porData = visiveis.reduce<Record<string, Pedido[]>>((acc, p) => {
-      (acc[p.entrega.data] ??= []).push(p);
+    const porData = (pedidos ?? []).reduce<Record<string, PedidoApi[]>>((acc, p) => {
+      (acc[p.dataEntrega] ??= []).push(p);
       return acc;
     }, {});
 
     return Object.keys(porData)
       .sort()
       .map((data) => ({ title: data, data: porData[data] }));
-  }, [pedidos, filtro]);
+  }, [pedidos]);
+
+  const cabecalho = (
+    <Cabecalho
+      titulo="Painel de Pedidos"
+      subtitulo={isPending ? 'Carregando…' : `${ativos} pedidos ativos`}
+      acao={
+        <Pressable onPress={sairDaConta} hitSlop={8}>
+          <Texto variante="legenda" peso="semibold" cor={cores.branco}>
+            Sair
+          </Texto>
+        </Pressable>
+      }
+    />
+  );
 
   return (
     <View style={styles.tela}>
-      <Cabecalho
-        titulo="Painel de Pedidos"
-        subtitulo={`${ativos} pedidos ativos`}
-        acao={
-          <Pressable onPress={sairDaConta} hitSlop={8}>
-            <Texto variante="legenda" peso="semibold" cor={cores.branco}>
-              Sair
-            </Texto>
-          </Pressable>
-        }
-      />
+      {cabecalho}
 
       <ScrollView
         horizontal
@@ -69,24 +81,35 @@ export default function PainelPedidos() {
         ))}
       </ScrollView>
 
-      <SectionList
-        sections={secoes}
-        keyExtractor={(pedido) => pedido.id}
-        contentContainerStyle={styles.lista}
-        renderSectionHeader={({ section }) => (
-          <Texto peso="semibold" style={styles.secao}>
-            {formatarData(section.title)} — {diaDaSemana(section.title)}
-          </Texto>
-        )}
-        renderItem={({ item }) => (
-          <CardPedido
-            pedido={item}
-            mostrarCliente
-            onPress={() => router.push(`/(admin)/pedido/${item.id}`)}
-          />
-        )}
-        ListEmptyComponent={<Vazio mensagem="Nenhum pedido neste filtro." />}
-      />
+      {isPending ? (
+        <ActivityIndicator color={cores.vinho} style={styles.carregando} />
+      ) : isError ? (
+        <Vazio
+          mensagem="Não foi possível carregar os pedidos. Verifique sua conexão."
+          acao={{ rotulo: 'Tentar novamente', aoTocar: () => refetch() }}
+        />
+      ) : (
+        <SectionList
+          sections={secoes}
+          keyExtractor={(pedido) => pedido.id}
+          contentContainerStyle={styles.lista}
+          refreshing={isRefetching}
+          onRefresh={refetch}
+          renderSectionHeader={({ section }) => (
+            <Texto peso="semibold" style={styles.secao}>
+              {formatarData(section.title)} — {diaDaSemana(section.title)}
+            </Texto>
+          )}
+          renderItem={({ item }) => (
+            <CardPedido
+              pedido={item}
+              mostrarCliente
+              onPress={() => router.push(`/(admin)/pedido/${item.id}`)}
+            />
+          )}
+          ListEmptyComponent={<Vazio mensagem="Nenhum pedido neste filtro." />}
+        />
+      )}
     </View>
   );
 }
@@ -95,6 +118,7 @@ const styles = StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.branco },
   filtrosScroll: { flexGrow: 0, flexShrink: 0 },
   filtros: { gap: espaco.sm, padding: espaco.md, alignItems: 'center' },
+  carregando: { marginTop: espaco.xl },
   lista: { padding: espaco.md, paddingTop: 0, gap: espaco.md },
   secao: {
     backgroundColor: cores.rosaClaro,

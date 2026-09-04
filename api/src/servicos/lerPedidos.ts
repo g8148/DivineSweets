@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import type { StatusPedido } from '@divine/shared';
 import { db } from '../db/client.ts';
-import { pedidoSelecoes, pedidos, user } from '../db/schema.ts';
+import { pedidoSelecoes, pedidos, produtos, user } from '../db/schema.ts';
 
 type LinhaPedido = typeof pedidos.$inferSelect;
 
@@ -20,6 +20,10 @@ export function montarPedido(
   linha: LinhaPedido,
   selecoes: Selecao[],
   cliente: { nome: string; telefone: string },
+  // A foto atual do produto, para a miniatura do card. É a única coisa aqui que
+  // não é instantâneo do pedido: o nome fica congelado no momento da compra,
+  // mas a imagem é só ilustração e vale mais estar certa do que fiel à época.
+  produtoImagemUrl: string | null,
 ) {
   const { usuarioId, criadoEm, ...resto } = linha;
   return {
@@ -28,21 +32,23 @@ export function montarPedido(
     criadoEm: criadoEm.toISOString(),
     clienteNome: cliente.nome,
     clienteTelefone: cliente.telefone,
+    produtoImagemUrl,
   };
 }
 
 /**
- * Completa uma lista inteira em três consultas, e não em duas por pedido. A
- * listagem administrativa cresce sem limite: buscar seleções e cliente pedido a
- * pedido faria o número de idas ao banco acompanhar o tamanho da lista.
+ * Completa uma lista inteira em quatro consultas, e não em três por pedido. A
+ * listagem administrativa cresce sem limite: buscar seleções, cliente e produto
+ * pedido a pedido faria o número de idas ao banco acompanhar o tamanho da lista.
  */
 async function completar(linhas: LinhaPedido[]) {
   if (linhas.length === 0) return [];
 
   const ids = linhas.map((l) => l.id);
   const donos = [...new Set(linhas.map((l) => l.usuarioId))];
+  const produtosPedidos = [...new Set(linhas.map((l) => l.produtoId))];
 
-  const [selecoes, clientes] = await Promise.all([
+  const [selecoes, clientes, imagens] = await Promise.all([
     db
       .select({
         pedidoId: pedidoSelecoes.pedidoId,
@@ -57,6 +63,10 @@ async function completar(linhas: LinhaPedido[]) {
       .select({ id: user.id, nome: user.name, telefone: user.telefone })
       .from(user)
       .where(inArray(user.id, donos)),
+    db
+      .select({ id: produtos.id, imagemUrl: produtos.imagemUrl })
+      .from(produtos)
+      .where(inArray(produtos.id, produtosPedidos)),
   ]);
 
   const porPedido = new Map<string, Selecao[]>();
@@ -67,13 +77,16 @@ async function completar(linhas: LinhaPedido[]) {
   }
 
   const porCliente = new Map(clientes.map((c) => [c.id, c]));
+  const porProduto = new Map(imagens.map((p) => [p.id, p.imagemUrl]));
 
   return linhas.map((linha) => {
     const cliente = porCliente.get(linha.usuarioId);
-    return montarPedido(linha, porPedido.get(linha.id) ?? [], {
-      nome: cliente?.nome ?? '',
-      telefone: cliente?.telefone ?? '',
-    });
+    return montarPedido(
+      linha,
+      porPedido.get(linha.id) ?? [],
+      { nome: cliente?.nome ?? '', telefone: cliente?.telefone ?? '' },
+      porProduto.get(linha.produtoId) ?? null,
+    );
   });
 }
 

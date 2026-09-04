@@ -1,4 +1,4 @@
-import type { Categoria, GrupoOpcao, Personalizacao, Produto } from './tipos.ts';
+import type { Categoria, GrupoOpcao, Produto } from './tipos.ts';
 
 export const categorias: { id: Categoria; nome: string }[] = [
   { id: 'cookies', nome: 'Cookies' },
@@ -230,28 +230,6 @@ export const grupos: Record<string, GrupoOpcao> = {
  * Traduz as seleções (que guardam ids) para pares legíveis, na ordem em que os
  * grupos aparecem no produto. Usado por todas as telas de resumo.
  */
-export function descreverSelecoes(
-  produto: Produto,
-  personalizacao: Personalizacao,
-): { rotulo: string; valor: string }[] {
-  return produto.gruposIds.flatMap((grupoId) => {
-    const grupo = grupos[grupoId];
-    const opcaoId = personalizacao.selecoes[grupoId];
-    if (!grupo || !opcaoId) return [];
-    const opcao = grupo.opcoes.find((o) => o.id === opcaoId);
-    if (!opcao) return [];
-    return [{ rotulo: grupo.titulo, valor: opcao.nome }];
-  });
-}
-
-export function gruposDoProduto(produto: Produto): GrupoOpcao[] {
-  return produto.gruposIds.map((id) => {
-    const grupo = grupos[id];
-    if (!grupo) throw new Error(`Grupo de opção desconhecido: ${id}`);
-    return grupo;
-  });
-}
-
 export function buscarProduto(id: string): Produto | undefined {
   return catalogo.find((p) => p.id === id);
 }
