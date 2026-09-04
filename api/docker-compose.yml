@@ -1,0 +1,28 @@
+# O nome do projeto é declarado explicitamente. Sem isto o Compose o deriva do
+# diretório — que aqui é `api`, o mesmo nome do diretório do compose do Trocai,
+# e os dois projetos passariam a disputar os mesmos containers e volumes.
+name: divine-sweets
+
+services:
+  db:
+    image: postgres:18.4
+    container_name: divine-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: divine
+      POSTGRES_USER: divine
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-divine_dev_2026}
+    # Bind em 127.0.0.1: o banco só aceita conexão da própria máquina,
+    # que na VPS é compartilhada com outros projetos.
+    ports:
+      - "127.0.0.1:${DB_PORT:-7520}:5432"
+    volumes:
+      - divine_postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U divine -d divine"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  divine_postgres:
