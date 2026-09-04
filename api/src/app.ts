@@ -3,7 +3,9 @@ import { logger } from 'hono/logger';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { auth } from './auth.ts';
 import { ErroApi } from './erros.ts';
+import { montarDocs } from './docs.ts';
 import type { Variables } from './middleware/sessao.ts';
+import { rotasProdutos } from './rotas/produtos.ts';
 
 export function criarApp() {
   const app = new Hono<{ Variables: Variables }>();
@@ -14,6 +16,11 @@ export function criarApp() {
   app.on(['POST', 'GET'], '/api/auth/*', (c) => auth.handler(c.req.raw));
 
   app.get('/health', (c) => c.json({ ok: true }));
+
+  app.route('/api/produtos', rotasProdutos);
+
+  // Por último, para a spec enxergar todas as rotas acima.
+  montarDocs(app);
 
   app.notFound((c) => c.json({ erro: 'Rota não encontrada' }, 404));
 
