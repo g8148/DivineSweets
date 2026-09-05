@@ -7,6 +7,7 @@ import { Cabecalho } from '@/components/Cabecalho';
 import { Cartao } from '@/components/Cartao';
 import { LinhaResumo } from '@/components/LinhaResumo';
 import { Texto } from '@/components/Texto';
+import { formatarTelefone } from '@divine/shared';
 import { cores, espaco } from '@/theme';
 
 export default function Perfil() {
@@ -31,7 +32,7 @@ export default function Perfil() {
           <Texto peso="semibold">Dados pessoais</Texto>
           <LinhaResumo rotulo="Nome" valor={usuario?.nome ?? ''} />
           <LinhaResumo rotulo="E-mail" valor={usuario?.email ?? ''} />
-          <LinhaResumo rotulo="Telefone" valor={usuario?.telefone ?? ''} />
+          <LinhaResumo rotulo="Telefone" valor={formatarTelefone(usuario?.telefone ?? '')} />
         </Cartao>
 
         <Cartao style={styles.cartao}>

@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Linking,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdminPedido, useAtualizarStatus } from '@/api/admin';
 import { BlocoEntrega, BlocoProduto, BlocoValores } from '@/components/BlocosPedido';
@@ -13,7 +21,7 @@ import { StatusStepper } from '@/components/StatusStepper';
 import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
 import { Phone } from '@/components/icones';
-import { numeroPedido } from '@divine/shared';
+import { apenasDigitos, formatarTelefone, numeroPedido } from '@divine/shared';
 import { ORDEM_STATUS } from '@/data/status';
 import { cores, espaco, raio } from '@/theme';
 import type { StatusPedido } from '@divine/shared';
@@ -32,8 +40,11 @@ export default function DetalhePedidoAdmin() {
 
   const [modalAberto, setModalAberto] = useState(false);
   const [motivo, setMotivo] = useState('');
-  const [erroMotivo, setErroMotivo] = useState('');
+  const [tentouRecusar, setTentouRecusar] = useState(false);
   const [aviso, setAviso] = useState('');
+
+  // Derivado, como nas demais telas: escrever o motivo já apaga a cobrança.
+  const erroMotivo = tentouRecusar && !motivo.trim() ? 'Informe o motivo da recusa' : '';
 
   if (isPending) {
     return (
@@ -77,14 +88,34 @@ export default function DetalhePedidoAdmin() {
   async function confirmarRecusa() {
     // O servidor também exige o motivo; conferir aqui evita a ida de rede e dá
     // o erro ao lado do campo, e não numa faixa no rodapé.
-    if (!motivo.trim()) {
-      setErroMotivo('Informe o motivo da recusa');
-      return;
-    }
-    setErroMotivo('');
+    setTentouRecusar(true);
+    if (!motivo.trim()) return;
+
     await mudarStatus('recusado', motivo.trim());
     setModalAberto(false);
     setMotivo('');
+    setTentouRecusar(false);
+  }
+
+  /**
+   * O botão do telefone abre o discador com o número do cliente.
+   *
+   * Ele existia sem `onPress`: um ícone com área de toque que não fazia nada,
+   * bem ao lado do único número da tela. A confeiteira liga para combinar
+   * recheio e endereço, e é dessa tela que ela sai para fazer isso.
+   */
+  async function ligarParaCliente() {
+    if (!pedido) return;
+    const digitos = apenasDigitos(pedido.clienteTelefone);
+    if (!digitos) {
+      setAviso('Este cliente não deixou telefone.');
+      return;
+    }
+    try {
+      await Linking.openURL(`tel:${digitos}`);
+    } catch {
+      setAviso('Não foi possível abrir o discador neste aparelho.');
+    }
   }
 
   return (
@@ -97,10 +128,16 @@ export default function DetalhePedidoAdmin() {
             <View style={styles.clienteDados}>
               <Texto peso="semibold">{pedido.clienteNome}</Texto>
               <Texto variante="legenda" cor={cores.cinzaEscuro}>
-                {pedido.clienteTelefone}
+                {formatarTelefone(pedido.clienteTelefone)}
               </Texto>
             </View>
-            <Pressable hitSlop={8} style={styles.telefone}>
+            <Pressable
+              hitSlop={8}
+              style={styles.telefone}
+              accessibilityRole="button"
+              accessibilityLabel={`Ligar para ${pedido.clienteNome}`}
+              onPress={ligarParaCliente}
+            >
               <Phone size={20} color={cores.vinho} strokeWidth={2} />
             </Pressable>
           </View>

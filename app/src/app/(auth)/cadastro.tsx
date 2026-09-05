@@ -6,6 +6,7 @@ import { Botao } from '@/components/Botao';
 import { Cabecalho } from '@/components/Cabecalho';
 import { Campo } from '@/components/Campo';
 import { Texto } from '@/components/Texto';
+import { apenasDigitos, mascararTelefone } from '@divine/shared';
 import { cores, espaco } from '@/theme';
 
 type Erros = { nome: string; telefone: string; email: string; senha: string };
@@ -23,32 +24,38 @@ export default function Cadastro() {
   const [telefone, setTelefone] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [erros, setErros] = useState<Erros>(SEM_ERROS);
+  // Só o fato de já ter havido uma tentativa fica guardado; as mensagens saem
+  // do que está preenchido agora. Guardá-las em estado as deixava na tela
+  // depois de o campo ter sido corrigido, até o toque seguinte no botão.
+  const [tentouCadastrar, setTentouCadastrar] = useState(false);
   const [aviso, setAviso] = useState('');
   const [enviando, setEnviando] = useState(false);
 
+  const emailLimpo = email.trim();
+  // O que vai para o servidor é só dígito; a pontuação é da tela. Assim o
+  // número gravado não depende de como cada pessoa resolveu escrevê-lo.
+  const digitos = apenasDigitos(telefone);
+
+  const pendencias: Erros = {
+    nome: nome.trim() ? '' : 'Campo obrigatório',
+    telefone: !digitos ? 'Campo obrigatório' : digitos.length < 10 ? 'Telefone inválido' : '',
+    email: !emailLimpo ? 'Campo obrigatório' : !emailLimpo.includes('@') ? 'E-mail inválido' : '',
+    senha: !senha
+      ? 'Campo obrigatório'
+      : senha.length < MINIMO_SENHA
+        ? `Use ao menos ${MINIMO_SENHA} caracteres`
+        : '',
+  };
+  const erros = tentouCadastrar ? pendencias : SEM_ERROS;
+
   async function aoCadastrar() {
-    const emailLimpo = email.trim();
-    const digitos = telefone.replace(/\D/g, '');
-
-    const proximos: Erros = {
-      nome: nome.trim() ? '' : 'Campo obrigatório',
-      telefone: !digitos ? 'Campo obrigatório' : digitos.length < 10 ? 'Telefone inválido' : '',
-      email: !emailLimpo ? 'Campo obrigatório' : !emailLimpo.includes('@') ? 'E-mail inválido' : '',
-      senha: !senha
-        ? 'Campo obrigatório'
-        : senha.length < MINIMO_SENHA
-          ? `Use ao menos ${MINIMO_SENHA} caracteres`
-          : '',
-    };
-
-    setErros(proximos);
+    setTentouCadastrar(true);
     setAviso('');
-    if (Object.values(proximos).some(Boolean)) return;
+    if (Object.values(pendencias).some(Boolean)) return;
 
     setEnviando(true);
     try {
-      await cadastrar({ nome: nome.trim(), email: emailLimpo, senha, telefone });
+      await cadastrar({ nome: nome.trim(), email: emailLimpo, senha, telefone: digitos });
       // O cadastro já deixa a sessão aberta; a tela inicial decide para onde ir
       // a partir do papel que o servidor atribuiu.
       router.replace('/');
@@ -67,7 +74,7 @@ export default function Cadastro() {
         <Campo
           rotulo="Telefone"
           valor={telefone}
-          aoMudar={setTelefone}
+          aoMudar={(digitado) => setTelefone(mascararTelefone(digitado))}
           erro={erros.telefone}
           placeholder="(49) 99999-0000"
           teclado="phone-pad"

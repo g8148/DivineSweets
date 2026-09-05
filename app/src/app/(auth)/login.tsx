@@ -13,22 +13,25 @@ export default function Login() {
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [erroEmail, setErroEmail] = useState('');
-  const [erroSenha, setErroSenha] = useState('');
+  // Guardado é só o fato de já ter havido uma tentativa: as mensagens são
+  // derivadas do que está preenchido agora e somem assim que o campo é
+  // corrigido, sem esperar o toque seguinte em "Entrar".
+  const [tentouEntrar, setTentouEntrar] = useState(false);
   const [aviso, setAviso] = useState('');
   const [enviando, setEnviando] = useState(false);
 
-  async function aoEntrar() {
-    const emailLimpo = email.trim();
-    const problemaEmail = !emailLimpo
-      ? 'Informe seu e-mail'
-      : !emailLimpo.includes('@')
-        ? 'E-mail inválido'
-        : '';
-    const problemaSenha = !senha ? 'Informe sua senha' : '';
+  const emailLimpo = email.trim();
+  const problemaEmail = !emailLimpo
+    ? 'Informe seu e-mail'
+    : !emailLimpo.includes('@')
+      ? 'E-mail inválido'
+      : '';
+  const problemaSenha = !senha ? 'Informe sua senha' : '';
+  const erroEmail = tentouEntrar ? problemaEmail : '';
+  const erroSenha = tentouEntrar ? problemaSenha : '';
 
-    setErroEmail(problemaEmail);
-    setErroSenha(problemaSenha);
+  async function aoEntrar() {
+    setTentouEntrar(true);
     setAviso('');
     if (problemaEmail || problemaSenha) return;
 

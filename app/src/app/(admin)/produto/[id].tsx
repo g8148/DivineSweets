@@ -14,7 +14,7 @@ import { Campo } from '@/components/Campo';
 import { Cartao } from '@/components/Cartao';
 import { Chip } from '@/components/Chip';
 import { Texto } from '@/components/Texto';
-import { categorias } from '@divine/shared';
+import { categorias, centavosDeTexto, formatarCentavos, mascararMoeda } from '@divine/shared';
 import { cores, espaco, raio } from '@/theme';
 import type { Categoria } from '@divine/shared';
 
@@ -42,8 +42,9 @@ export default function FormularioProduto() {
   const [permiteFoto, setPermiteFoto] = useState(false);
   const [imagemUrl, setImagemUrl] = useState<string | null>(null);
 
-  const [erroNome, setErroNome] = useState('');
-  const [erroPreco, setErroPreco] = useState('');
+  // Como nas demais telas, o que fica em estado é só a tentativa; as mensagens
+  // vêm do que está preenchido agora e somem assim que o campo é corrigido.
+  const [tentouSalvar, setTentouSalvar] = useState(false);
   const [aviso, setAviso] = useState('');
 
   // Uma vez só, quando o produto chega: preencher a cada render descartaria o
@@ -52,7 +53,7 @@ export default function FormularioProduto() {
     setPronto(true);
     setNome(existente.nome);
     setDescricao(existente.descricao);
-    setPreco((existente.precoBase / 100).toFixed(2).replace('.', ','));
+    setPreco(formatarCentavos(existente.precoBase));
     setCategoria(existente.categoria);
     setGruposIds(existente.grupos.map((g) => g.id));
     setPermiteMensagem(existente.permiteMensagem);
@@ -86,15 +87,17 @@ export default function FormularioProduto() {
     }
   }
 
+  // A máscara garante que o texto sempre se converte; o que resta conferir é
+  // se há valor. O parse à mão (`replace(',', '.')`) recusava "1.234,50", que
+  // é exatamente como se escreve um bolo de mil e duzentos reais.
+  const precoNumero = centavosDeTexto(preco) ?? 0;
+  const problemaNome = nome.trim() ? '' : 'Informe o nome';
+  const problemaPreco = precoNumero <= 0 ? 'Informe um preço válido' : '';
+  const erroNome = tentouSalvar ? problemaNome : '';
+  const erroPreco = tentouSalvar ? problemaPreco : '';
+
   async function salvar() {
-    const precoNumero = Math.round(Number(preco.replace(',', '.')) * 100);
-
-    const problemaNome = nome.trim() ? '' : 'Informe o nome';
-    const problemaPreco =
-      !Number.isFinite(precoNumero) || precoNumero <= 0 ? 'Informe um preço válido' : '';
-
-    setErroNome(problemaNome);
-    setErroPreco(problemaPreco);
+    setTentouSalvar(true);
     setAviso('');
     if (problemaNome || problemaPreco) return;
 
@@ -160,7 +163,7 @@ export default function FormularioProduto() {
           <Campo
             rotulo="Preço-base (R$)"
             valor={preco}
-            aoMudar={setPreco}
+            aoMudar={(digitado) => setPreco(mascararMoeda(digitado))}
             erro={erroPreco}
             placeholder="0,00"
             teclado="decimal-pad"

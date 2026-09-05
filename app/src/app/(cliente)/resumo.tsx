@@ -16,7 +16,7 @@ import { LinhaResumo } from '@/components/LinhaResumo';
 import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
 import { Copy } from '@/components/icones';
-import { diaDaSemana, formatarData, formatarMoeda } from '@divine/shared';
+import { diaDaSemana, formatarData, formatarMoeda, formatarTelefone } from '@divine/shared';
 import { descreverSelecoesDeGrupos } from '@divine/shared';
 import { calcularSubtotal, calcularTotal, TAXA_ENTREGA } from '@divine/shared';
 import { useRascunho } from '@/state/RascunhoPedidoContext';
@@ -177,7 +177,7 @@ export default function Resumo() {
         <Cartao style={styles.cartao}>
           <Texto peso="semibold">Contato</Texto>
           <LinhaResumo rotulo="Nome" valor={usuario?.nome ?? ''} />
-          <LinhaResumo rotulo="Telefone" valor={usuario?.telefone ?? ''} />
+          <LinhaResumo rotulo="Telefone" valor={formatarTelefone(usuario?.telefone ?? '')} />
         </Cartao>
 
         <Cartao style={styles.cartao}>
