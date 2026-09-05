@@ -31,7 +31,7 @@ function formatarTamanho(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-function paginaComApk(tamanho: string, data: string) {
+function paginaComApk(tamanho: string, data: string, versao: string) {
   return `<!doctype html>
 <html lang="pt-BR">
 <meta charset="utf-8">
@@ -54,7 +54,7 @@ function paginaComApk(tamanho: string, data: string) {
 <main>
   <h1>Divine Sweets</h1>
   <p>Aplicativo de encomendas para Android.</p>
-  <a class="baixar" href="/app/${NOME_DO_ARQUIVO}">Baixar o APK</a>
+  <a class="baixar" href="/app/${NOME_DO_ARQUIVO}?v=${versao}">Baixar o APK</a>
   <p class="meta">${tamanho} &middot; publicado em ${data}</p>
   <h2 style="font-size:1rem;margin-top:2rem">Como instalar</h2>
   <ol>
@@ -86,6 +86,13 @@ export const rotasApp = new Hono()
       paginaComApk(
         formatarTamanho(info.size),
         info.mtime.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
+        // O link carrega a data de publicação do arquivo. O `Cache-Control` que
+        // mandamos não basta: o Cloudflare guarda o APK na borda por conta da
+        // extensão e reescreve o cabeçalho para `max-age=14400` — uma versão
+        // nova seguiria quatro horas invisível, com o nome do arquivo igual ao
+        // da anterior. Publicação nova muda o `mtime`, o endereço muda junto e
+        // a borda não tem o que devolver de velho.
+        String(Math.floor(info.mtimeMs)),
       ),
     );
   })

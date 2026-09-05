@@ -38,8 +38,26 @@ test('a página de download aponta para o arquivo e mostra o tamanho', async () 
   const res = await app.request('/app');
   assert.strictEqual(res.status, 200);
   const html = await res.text();
-  assert.ok(html.includes('href="/app/divine-sweets.apk"'));
   assert.ok(html.includes('0.0 MB'));
+
+  // O link carrega a data de publicação: sem isso o Cloudflare serviria por
+  // horas o APK antigo, já que o nome do arquivo não muda entre entregas.
+  const link = html.match(/href="(\/app\/divine-sweets\.apk\?v=\d+)"/);
+  assert.ok(link, `a página não trouxe o link versionado:\n${html}`);
+});
+
+test('o download responde igual com ou sem a versão no endereço', async () => {
+  await comApk();
+
+  const semVersao = await app.request('/app/divine-sweets.apk');
+  const comVersao = await app.request('/app/divine-sweets.apk?v=123456');
+
+  assert.strictEqual(semVersao.status, 200);
+  assert.strictEqual(comVersao.status, 200);
+  assert.deepStrictEqual(
+    Buffer.from(await comVersao.arrayBuffer()),
+    Buffer.from(await semVersao.arrayBuffer()),
+  );
 });
 
 // O Android só oferece a instalação quando o tipo é este; como
