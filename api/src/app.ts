@@ -12,6 +12,7 @@ import { rotasAdminGrupos } from './rotas/admin/grupos.ts';
 import { rotasAdminPedidos } from './rotas/admin/pedidos.ts';
 import { rotasAdminProdutos } from './rotas/admin/produtos.ts';
 import { rotasAgenda } from './rotas/agenda.ts';
+import { rotasApp } from './rotas/app.ts';
 import { rotasPedidos } from './rotas/pedidos.ts';
 import { rotasProdutos } from './rotas/produtos.ts';
 import { rotasUpload } from './rotas/upload.ts';
@@ -25,6 +26,10 @@ export function criarApp() {
   app.on(['POST', 'GET'], '/api/auth/*', (c) => auth.handler(c.req.raw));
 
   app.get('/health', (c) => c.json({ ok: true }));
+
+  // Página de download do APK. Fora de `/api` de propósito: é endereço para
+  // ditar a uma pessoa, não rota de programa.
+  app.route('/app', rotasApp);
 
   app.route('/api/produtos', rotasProdutos);
   app.route('/api/agenda', rotasAgenda);

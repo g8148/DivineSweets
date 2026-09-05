@@ -14,6 +14,7 @@ const envSchema = z.object({
   BETTER_AUTH_SECRET: z.string().min(32, 'Use ao menos 32 caracteres'),
   BETTER_AUTH_URL: z.url(),
   UPLOADS_DIR: z.string().default('./uploads'),
+  APK_PATH: z.string().default('./publico/divine-sweets.apk'),
   NODE_ENV: z.enum(['development', 'production']).default('development'),
 });
 
@@ -25,13 +26,13 @@ if (!parsed.success) {
 }
 
 /**
- * Um `UPLOADS_DIR` relativo é resolvido a partir da raiz do pacote `api`, e não
+ * Um caminho relativo é resolvido a partir da raiz do pacote `api`, e não
  * do diretório de trabalho. Enquanto dependia do cwd, `npm run db:seed` na raiz
  * do monorepo gravava as imagens em `DivineSweets/uploads` e o servidor
  * procurava por elas em `DivineSweets/api/uploads` — duas pastas, e as fotos do
  * catálogo simplesmente não apareciam.
  */
-function resolverUploads(valor: string) {
+function resolverCaminho(valor: string) {
   return path.isAbsolute(valor) ? valor : path.resolve(RAIZ_DA_API, valor);
 }
 
@@ -40,6 +41,7 @@ export const config = {
   databaseUrl: parsed.data.DATABASE_URL,
   authSecret: parsed.data.BETTER_AUTH_SECRET,
   baseUrl: parsed.data.BETTER_AUTH_URL,
-  uploadsDir: resolverUploads(parsed.data.UPLOADS_DIR),
+  uploadsDir: resolverCaminho(parsed.data.UPLOADS_DIR),
+  apkPath: resolverCaminho(parsed.data.APK_PATH),
   ambiente: parsed.data.NODE_ENV,
 };

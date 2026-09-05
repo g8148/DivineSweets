@@ -1,0 +1,23 @@
+# Instalar em: /etc/systemd/system/divinesweets-api.service
+# Depois: sudo systemctl daemon-reload && sudo systemctl enable --now divinesweets-api
+
+[Unit]
+Description=Divine Sweets API (Hono/Node)
+After=network.target docker.service
+
+[Service]
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/DivineSweets/api
+EnvironmentFile=/opt/DivineSweets/api/.env
+# Node 24 instalado em /opt, e não o do sistema: a VPS é compartilhada e o
+# `node` de /usr/bin é a versão 22, que outros projetos usam. O pacote exige
+# 24 (`engines` do package.json) e o seed roda TypeScript direto.
+ExecStart=/opt/node24/bin/node /opt/DivineSweets/api/dist/index.js
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/log/divinesweets-api.log
+StandardError=append:/var/log/divinesweets-api-error.log
+
+[Install]
+WantedBy=multi-user.target

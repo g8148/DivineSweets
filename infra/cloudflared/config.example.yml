@@ -1,0 +1,15 @@
+# O túnel desta VPS é COMPARTILHADO com outros projetos. Não substitua o
+# arquivo: ACRESCENTE o bloco abaixo aos ingress existentes em
+# /etc/cloudflared/config.yml, sempre ANTES da regra final http_status:404
+# (o cloudflared usa a primeira regra que casar).
+#
+#   cloudflared tunnel route dns <TUNNEL_ID> api-divinesweets.gabrie.dev
+#   sudo systemctl restart cloudflared
+
+ingress:
+  - hostname: api-divinesweets.gabrie.dev
+    service: http://localhost:8100
+
+  # (mantenha aqui os ingress dos outros projetos)
+
+  - service: http_status:404
