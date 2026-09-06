@@ -39,7 +39,7 @@ sudo tar -xJf "node-$V-linux-arm64.tar.xz" -C /opt/node24 --strip-components=1
 
 sudo install -d -m 755 -o ubuntu -g ubuntu /opt/DivineSweets
 sudo install -d -m 700 -o ubuntu -g ubuntu /var/backups/divinesweets
-git clone git@github.com:SEU-USUARIO/DivineSweets.git /opt/DivineSweets
+git clone git@github.com:g8148/DivineSweets.git /opt/DivineSweets
 ```
 
 O `.env` da API é escrito à mão, uma vez, e nunca entra no Git:
