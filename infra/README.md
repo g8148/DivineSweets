@@ -110,6 +110,28 @@ cd /opt/DivineSweets && git pull && bash infra/deploy.sh
 O script faz backup do banco **antes** de migrar e compila **antes** de
 reiniciar: se o build falhar, o serviço continua no ar com a versão anterior.
 
+### O acesso que o GitHub Actions usa
+
+O workflow entra na VPS por SSH, e a chave que ele usa **não** é a chave
+pessoal de quem administra a máquina: a VPS é compartilhada com outros
+projetos, e um segredo vazado levaria todos eles junto. O par é dedicado a
+este deploy e pode ser revogado sozinho, apagando uma linha do
+`authorized_keys`, sem mexer no acesso de ninguém.
+
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/divinesweets-deploy -N '' -C 'github-actions-divinesweets'
+ssh-copy-id -i ~/.ssh/divinesweets-deploy.pub hay
+
+gh secret set VPS_HOST --body '136.248.98.221'
+gh secret set VPS_USER --body 'ubuntu'
+gh secret set VPS_SSH_KEY < ~/.ssh/divinesweets-deploy   # a chave privada
+```
+
+O `git` não usa essa chave: o repositório é público e `/opt/DivineSweets`
+busca por HTTPS, com `origin` apontando para
+`https://github.com/g8148/DivineSweets.git`. A chave serve só para abrir a
+sessão SSH.
+
 ## Publicar uma nova versão do aplicativo
 
 O APK é gerado na máquina de desenvolvimento e enviado para a VPS, de onde a
