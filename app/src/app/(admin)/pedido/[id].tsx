@@ -9,6 +9,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAdminPedido, useAtualizarStatus } from '@/api/admin';
 import { BlocoEntrega, BlocoProduto, BlocoValores } from '@/components/BlocosPedido';
@@ -180,8 +181,20 @@ export default function DetalhePedidoAdmin() {
         </View>
       )}
 
-      <Modal visible={modalAberto} transparent animationType="fade" onRequestClose={() => setModalAberto(false)}>
-        <View style={styles.fundoModal}>
+      {/* Ponta a ponta também aqui: sem `statusBarTranslucent` o Modal abre a
+          sua própria janela com as barras opacas e a caixa dá um pulo quando o
+          teclado sobe. */}
+      <Modal
+        visible={modalAberto}
+        transparent
+        statusBarTranslucent
+        navigationBarTranslucent
+        animationType="fade"
+        onRequestClose={() => setModalAberto(false)}
+      >
+        {/* A caixa é centrada na altura livre: quando o teclado sobe, a altura
+            livre encolhe e ela sobe junto, em vez de ficar por baixo dele. */}
+        <KeyboardAvoidingView behavior="padding" style={styles.fundoModal}>
           <View style={styles.caixaModal}>
             <Texto variante="subtitulo" peso="bold">
               Recusar pedido
@@ -205,7 +218,7 @@ export default function DetalhePedidoAdmin() {
             />
             <Botao titulo="Cancelar" variante="secundario" onPress={() => setModalAberto(false)} />
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

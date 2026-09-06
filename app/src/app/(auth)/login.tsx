@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import { useAuth } from '@/auth/useAuth';
 import { Botao } from '@/components/Botao';
 import { Campo } from '@/components/Campo';
+import { Rolagem } from '@/components/Rolagem';
 import { Texto } from '@/components/Texto';
 import { cores, espaco } from '@/theme';
 
@@ -50,7 +51,7 @@ export default function Login() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.conteudo} style={styles.tela}>
+    <Rolagem contentContainerStyle={styles.conteudo} style={styles.tela}>
       <Image source={require('@/assets/logomarca.jpg')} style={styles.logo} contentFit="cover" />
 
       <Texto variante="titulo" peso="bold" style={styles.titulo}>
@@ -88,7 +89,7 @@ export default function Login() {
           Não tem conta? Cadastre-se
         </Texto>
       </Pressable>
-    </ScrollView>
+    </Rolagem>
   );
 }
 

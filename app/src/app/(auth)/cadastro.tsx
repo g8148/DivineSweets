@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { router } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useAuth } from '@/auth/useAuth';
 import { Botao } from '@/components/Botao';
 import { Cabecalho } from '@/components/Cabecalho';
 import { Campo } from '@/components/Campo';
+import { Rolagem } from '@/components/Rolagem';
 import { Texto } from '@/components/Texto';
 import { apenasDigitos, mascararTelefone } from '@divine/shared';
 import { cores, espaco } from '@/theme';
@@ -69,7 +70,7 @@ export default function Cadastro() {
   return (
     <View style={styles.tela}>
       <Cabecalho titulo="Criar conta" comVoltar />
-      <ScrollView contentContainerStyle={styles.conteudo}>
+      <Rolagem contentContainerStyle={styles.conteudo}>
         <Campo rotulo="Nome" valor={nome} aoMudar={setNome} erro={erros.nome} placeholder="Seu nome completo" />
         <Campo
           rotulo="Telefone"
@@ -108,7 +109,7 @@ export default function Cadastro() {
           desabilitado={enviando}
           style={styles.botao}
         />
-      </ScrollView>
+      </Rolagem>
     </View>
   );
 }

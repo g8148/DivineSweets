@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { router } from 'expo-router';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useDisponibilidade } from '@/api/agenda';
 import { useProduto } from '@/api/produtos';
 import { Cabecalho } from '@/components/Cabecalho';
@@ -8,6 +8,7 @@ import { Calendario } from '@/components/Calendario';
 import { Campo } from '@/components/Campo';
 import { Chip } from '@/components/Chip';
 import { PrecoRodape } from '@/components/PrecoRodape';
+import { Rolagem } from '@/components/Rolagem';
 import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
 import { calcularTotal, formatarMoeda, TAXA_ENTREGA } from '@divine/shared';
@@ -108,7 +109,7 @@ export default function Entrega() {
     <View style={styles.tela}>
       <Cabecalho titulo="Data de entrega" subtitulo={produto.nome} comVoltar />
 
-      <ScrollView contentContainerStyle={styles.conteudo}>
+      <Rolagem contentContainerStyle={styles.conteudo}>
         <View>
           <Calendario
             dataSelecionada={entrega.data}
@@ -177,7 +178,7 @@ export default function Entrega() {
             />
           </View>
         )}
-      </ScrollView>
+      </Rolagem>
 
       <PrecoRodape valor={total} rotuloBotao="Revisar pedido" aoPressionar={aoRevisar} />
     </View>

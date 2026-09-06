@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Switch, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useGruposDeOpcoes, useSalvarProduto } from '@/api/admin';
 import { montarUrl } from '@/api/client';
@@ -13,6 +13,7 @@ import { Cabecalho } from '@/components/Cabecalho';
 import { Campo } from '@/components/Campo';
 import { Cartao } from '@/components/Cartao';
 import { Chip } from '@/components/Chip';
+import { Rolagem } from '@/components/Rolagem';
 import { Texto } from '@/components/Texto';
 import { categorias, centavosDeTexto, formatarCentavos, mascararMoeda } from '@divine/shared';
 import { cores, espaco, raio } from '@/theme';
@@ -136,7 +137,7 @@ export default function FormularioProduto() {
     <View style={styles.tela}>
       <Cabecalho titulo={criando ? 'Novo produto' : 'Editar produto'} comVoltar />
 
-      <ScrollView contentContainerStyle={styles.conteudo}>
+      <Rolagem contentContainerStyle={styles.conteudo}>
         <Cartao style={styles.cartao}>
           <Image
             source={imagemUrl ? { uri: montarUrl(imagemUrl) } : require('@/assets/logomarca.jpg')}
@@ -231,7 +232,7 @@ export default function FormularioProduto() {
             {aviso}
           </Texto>
         ) : null}
-      </ScrollView>
+      </Rolagem>
 
       <View style={[styles.rodape, { paddingBottom: espaco.md + insets.bottom }]}>
         <Botao

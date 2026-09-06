@@ -13,6 +13,8 @@ export {
   CirclePlus,
   ClipboardList,
   Copy,
+  Eye,
+  EyeOff,
   Images,
   MapPin,
   Minus,

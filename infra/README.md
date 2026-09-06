@@ -125,3 +125,15 @@ cd ../.. && bash infra/publicar-apk.sh
 
 O endereço embutido no APK é decidido no momento do build: sem a variável
 acima, o app sai apontando para o `.env` local e não fala com o servidor.
+
+E o `EXPO_PUBLIC_API_URL` não é entrada da tarefa do Gradle, então trocá-lo não
+invalida o pacote JavaScript já compilado: um build seguinte reaproveita o
+bundle anterior, com o endereço anterior dentro. Ao alternar de endereço, apague
+o bundle antes e confira o que ficou no APK:
+
+```bash
+rm -rf app/build/generated/assets/react app/build/intermediates/assets/release
+# depois do build:
+grep -ao 'https://api-divinesweets.gabrie.dev' \
+  app/build/generated/assets/react/release/index.android.bundle
+```

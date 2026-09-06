@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { useProduto } from '@/api/produtos';
 import { Botao } from '@/components/Botao';
 import { Cabecalho } from '@/components/Cabecalho';
 import { Campo } from '@/components/Campo';
 import { ListaOpcoes } from '@/components/ListaOpcoes';
 import { PrecoRodape } from '@/components/PrecoRodape';
+import { Rolagem } from '@/components/Rolagem';
 import { SeletorQuantidade } from '@/components/SeletorQuantidade';
 import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
@@ -92,7 +93,7 @@ export default function Personalizar() {
     <View style={styles.tela}>
       <Cabecalho titulo={produto.nome} subtitulo="Personalize seu pedido" comVoltar />
 
-      <ScrollView contentContainerStyle={styles.conteudo}>
+      <Rolagem contentContainerStyle={styles.conteudo}>
         {grupos.map((grupo) => (
           <View key={grupo.id} style={styles.grupo}>
             <Texto peso="semibold">
@@ -176,7 +177,7 @@ export default function Personalizar() {
             aoMudar={(quantidade) => atualizar({ quantidade })}
           />
         </View>
-      </ScrollView>
+      </Rolagem>
 
       <PrecoRodape valor={subtotal} rotuloBotao="Escolher data" aoPressionar={aoAvancar} />
     </View>
