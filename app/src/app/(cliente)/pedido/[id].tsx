@@ -9,7 +9,7 @@ import { StatusStepper } from '@/components/StatusStepper';
 import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
 import { Bell } from '@/components/icones';
-import { numeroPedido } from '@divine/shared';
+import { formatarTelefone, numeroPedido } from '@divine/shared';
 import { cores, espaco, raio } from '@/theme';
 import type { StatusPedido } from '@divine/shared';
 
@@ -71,7 +71,7 @@ export default function AcompanharPedido() {
         <Cartao style={styles.cartao}>
           <Texto peso="semibold">Contato</Texto>
           <LinhaResumo rotulo="Nome" valor={pedido.clienteNome} />
-          <LinhaResumo rotulo="Telefone" valor={pedido.clienteTelefone} />
+          <LinhaResumo rotulo="Telefone" valor={formatarTelefone(pedido.clienteTelefone)} />
         </Cartao>
 
         <BlocoValores pedido={pedido} />

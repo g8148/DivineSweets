@@ -6,16 +6,25 @@ import { useProduto } from '@/api/produtos';
 import { Cabecalho } from '@/components/Cabecalho';
 import { Calendario } from '@/components/Calendario';
 import { Campo } from '@/components/Campo';
-import { Chip } from '@/components/Chip';
 import { PrecoRodape } from '@/components/PrecoRodape';
 import { Rolagem } from '@/components/Rolagem';
+import { Seletor } from '@/components/Seletor';
 import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
 import { calcularTotal, formatarMoeda, TAXA_ENTREGA } from '@divine/shared';
 import { useRascunho } from '@/state/RascunhoPedidoContext';
 import { cores, espaco } from '@/theme';
+import type { ItemDeSelecao } from '@/components/Seletor';
+import type { Entrega } from '@divine/shared';
 
 const HORARIOS = ['09:00', '10:30', '14:00', '15:30', '17:00', '19:00'];
+
+// A taxa entra no rótulo pelo mesmo caminho que os acréscimos das opções do
+// doce: o valor fica na coluna da direita, alinhado com os demais.
+const TIPOS_DE_ENTREGA: ItemDeSelecao<Entrega['tipo']>[] = [
+  { id: 'retirada', rotulo: 'Retirar na loja' },
+  { id: 'entrega', rotulo: 'Entrega', detalhe: `+ ${formatarMoeda(TAXA_ENTREGA)}` },
+];
 
 type Erros = { data: string; hora: string; endereco: string };
 
@@ -129,16 +138,11 @@ export default function Entrega() {
 
         <View style={styles.bloco}>
           <Texto peso="semibold">Horário</Texto>
-          <View style={styles.opcoes}>
-            {HORARIOS.map((hora) => (
-              <Chip
-                key={hora}
-                rotulo={hora}
-                selecionado={entrega.hora === hora}
-                onPress={() => definirEntrega({ hora })}
-              />
-            ))}
-          </View>
+          <Seletor
+            itens={HORARIOS.map((hora) => ({ id: hora, rotulo: hora }))}
+            selecionadoId={entrega.hora}
+            aoSelecionar={(hora) => definirEntrega({ hora })}
+          />
           {erros.hora ? (
             <Texto variante="legenda" cor={cores.alertaTexto}>
               {erros.hora}
@@ -148,19 +152,11 @@ export default function Entrega() {
 
         <View style={styles.bloco}>
           <Texto peso="semibold">Como você quer receber</Texto>
-          <View style={styles.opcoes}>
-            <Chip
-              rotulo="Retirar na loja"
-              selecionado={entrega.tipo === 'retirada'}
-              onPress={() => definirEntrega({ tipo: 'retirada' })}
-            />
-            <Chip
-              rotulo="Entrega"
-              detalhe={`+ ${formatarMoeda(TAXA_ENTREGA)}`}
-              selecionado={entrega.tipo === 'entrega'}
-              onPress={() => definirEntrega({ tipo: 'entrega' })}
-            />
-          </View>
+          <Seletor
+            itens={TIPOS_DE_ENTREGA}
+            selecionadoId={entrega.tipo}
+            aoSelecionar={(tipo) => definirEntrega({ tipo })}
+          />
         </View>
 
         {entrega.tipo === 'entrega' && (
@@ -191,5 +187,4 @@ const styles = StyleSheet.create({
   carregando: { marginTop: espaco.xl },
   carregandoAgenda: { marginTop: espaco.sm },
   bloco: { gap: espaco.sm },
-  opcoes: { flexDirection: 'row', flexWrap: 'wrap', gap: espaco.sm },
 });

@@ -11,8 +11,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Botao } from '@/components/Botao';
 import { Cabecalho } from '@/components/Cabecalho';
 import { Cartao } from '@/components/Cartao';
-import { Chip } from '@/components/Chip';
 import { LinhaResumo } from '@/components/LinhaResumo';
+import { Seletor } from '@/components/Seletor';
 import { Texto } from '@/components/Texto';
 import { Vazio } from '@/components/Vazio';
 import { Copy } from '@/components/icones';
@@ -21,9 +21,17 @@ import { descreverSelecoesDeGrupos } from '@divine/shared';
 import { calcularSubtotal, calcularTotal, TAXA_ENTREGA } from '@divine/shared';
 import { useRascunho } from '@/state/RascunhoPedidoContext';
 import { cores, espaco, raio } from '@/theme';
+import type { ItemDeSelecao } from '@/components/Seletor';
 
 const CODIGO_PIX =
   '00020126580014BR.GOV.BCB.PIX0136divine-sweets-doceria5204000053039865802BR';
+
+type Pagamento = 'pix' | 'entrega';
+
+const PAGAMENTOS: ItemDeSelecao<Pagamento>[] = [
+  { id: 'pix', rotulo: 'PIX' },
+  { id: 'entrega', rotulo: 'Na entrega' },
+];
 
 export default function Resumo() {
   const { rascunho, entrega, limpar } = useRascunho();
@@ -33,7 +41,7 @@ export default function Resumo() {
   const enviarFoto = useEnviarImagem();
   const insets = useSafeAreaInsets();
 
-  const [pagamento, setPagamento] = useState<'pix' | 'entrega'>('pix');
+  const [pagamento, setPagamento] = useState<Pagamento>('pix');
   const [copiado, setCopiado] = useState(false);
   const [aviso, setAviso] = useState('');
   const timerCopia = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -196,14 +204,7 @@ export default function Resumo() {
 
         <Cartao style={styles.cartao}>
           <Texto peso="semibold">Pagamento</Texto>
-          <View style={styles.opcoes}>
-            <Chip rotulo="PIX" selecionado={pagamento === 'pix'} onPress={() => setPagamento('pix')} />
-            <Chip
-              rotulo="Na entrega"
-              selecionado={pagamento === 'entrega'}
-              onPress={() => setPagamento('entrega')}
-            />
-          </View>
+          <Seletor itens={PAGAMENTOS} selecionadoId={pagamento} aoSelecionar={setPagamento} />
 
           {pagamento === 'pix' && (
             <View style={styles.pix}>
@@ -256,7 +257,6 @@ const styles = StyleSheet.create({
     marginTop: espaco.sm,
     paddingTop: espaco.md,
   },
-  opcoes: { flexDirection: 'row', gap: espaco.sm, paddingVertical: espaco.sm },
   pix: { gap: espaco.sm },
   codigo: {
     fontFamily: 'monospace',

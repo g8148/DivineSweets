@@ -7,6 +7,7 @@ export {
   Cake,
   Calendar,
   Camera,
+  Check,
   ChevronLeft,
   ChevronRight,
   CircleCheck,

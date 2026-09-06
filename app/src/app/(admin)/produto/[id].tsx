@@ -12,8 +12,8 @@ import { Botao } from '@/components/Botao';
 import { Cabecalho } from '@/components/Cabecalho';
 import { Campo } from '@/components/Campo';
 import { Cartao } from '@/components/Cartao';
-import { Chip } from '@/components/Chip';
 import { Rolagem } from '@/components/Rolagem';
+import { Seletor, SeletorMultiplo } from '@/components/Seletor';
 import { Texto } from '@/components/Texto';
 import { categorias, centavosDeTexto, formatarCentavos, mascararMoeda } from '@divine/shared';
 import { cores, espaco, raio } from '@/theme';
@@ -173,16 +173,11 @@ export default function FormularioProduto() {
 
         <Cartao style={styles.cartao}>
           <Texto peso="semibold">Categoria</Texto>
-          <View style={styles.opcoes}>
-            {categorias.map((c) => (
-              <Chip
-                key={c.id}
-                rotulo={c.nome}
-                selecionado={categoria === c.id}
-                onPress={() => setCategoria(c.id)}
-              />
-            ))}
-          </View>
+          <Seletor
+            itens={categorias.map((c) => ({ id: c.id, rotulo: c.nome }))}
+            selecionadoId={categoria}
+            aoSelecionar={setCategoria}
+          />
         </Cartao>
 
         <Cartao style={styles.cartao}>
@@ -192,17 +187,16 @@ export default function FormularioProduto() {
           {grupos.isPending ? (
             <ActivityIndicator color={cores.vinho} style={styles.carregandoGrupos} />
           ) : (
-            <View style={styles.opcoes}>
-              {(grupos.data ?? []).map((grupo) => (
-                <Chip
-                  key={grupo.id}
-                  rotulo={grupo.titulo}
-                  detalhe={grupo.obrigatorio ? 'obrigatório' : undefined}
-                  selecionado={gruposIds.includes(grupo.id)}
-                  onPress={() => alternarGrupo(grupo.id)}
-                />
-              ))}
-            </View>
+            // Aqui a escolha é múltipla — um doce pode ter recheio e cobertura.
+            <SeletorMultiplo
+              itens={(grupos.data ?? []).map((grupo) => ({
+                id: grupo.id,
+                rotulo: grupo.titulo,
+                detalhe: grupo.obrigatorio ? 'obrigatório' : undefined,
+              }))}
+              selecionadosIds={gruposIds}
+              aoAlternar={alternarGrupo}
+            />
           )}
         </Cartao>
 
@@ -252,7 +246,6 @@ const styles = StyleSheet.create({
   carregando: { marginTop: espaco.xl },
   carregandoGrupos: { alignSelf: 'flex-start', paddingVertical: espaco.sm },
   foto: { width: '100%', height: 160, borderRadius: raio.md },
-  opcoes: { flexDirection: 'row', flexWrap: 'wrap', gap: espaco.sm },
   linhaSwitch: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   rotuloSwitch: { flexShrink: 1 },
   rodape: {
