@@ -6,3 +6,5 @@ dist/
 uploads/
 *.apk
 .expo/
+docs/superpowers/
+~$*
