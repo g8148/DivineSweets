@@ -41,7 +41,8 @@ Retomados da Atividade Avaliativa 1, com os mockups em [`docs/mockups/`](mockups
 - Envio de foto de referência
 - Resumo com o total antes de confirmar
 - Acompanhamento do pedido em quatro etapas
-- Histórico de pedidos e perfil
+- Histórico de pedidos
+- Perfil com edição dos dados pessoais (nome e telefone)
 
 **Administração**
 
@@ -214,6 +215,15 @@ O campo `role` é declarado com `input: false` no Better Auth: **não há caminh
 pela API para alguém se promover**. Nem no cadastro, nem na edição de perfil. A
 promoção é um `UPDATE` manual no banco, feito por quem tem acesso ao servidor.
 
+Isso foi verificado contra o servidor, e não apenas assumido: `POST
+/api/auth/update-user` com `{"role":"admin"}` no corpo, partindo de uma sessão
+de cliente legítima, é recusado com `FIELD_NOT_ALLOWED` — a requisição inteira
+falha, o nome e o telefone enviados junto também não são gravados.
+
+É esse mesmo endpoint que a edição de perfil usa. O aplicativo envia apenas
+`name` e `telefone`; o e-mail fica de fora porque é a identidade de login e a
+troca exigiria verificar o endereço novo.
+
 No aplicativo, a autorização aparece na estrutura de rotas. Os grupos
 `(auth)`, `(cliente)` e `(admin)` têm cada um seu `_layout.tsx`, que redireciona
 quem não deveria estar ali. Mas isso é conveniência de navegação, não segurança:
@@ -382,6 +392,11 @@ coluna `ordem` fixou a apresentação.
   físico sobre rede móvel real.
 - **Um único perfil administrativo.** Não há distinção entre confeiteira,
   atendente e entregador.
+- **Sem agenda de endereços.** O perfil permite editar os dados pessoais, mas
+  não guarda uma lista de endereços: o endereço de entrega é digitado a cada
+  pedido e fica gravado no próprio pedido. Um cliente que sempre recebe no mesmo
+  lugar redigita o endereço toda vez. A tabela e a tela existiriam sem
+  dificuldade técnica — faltou tempo dentro do prazo da entrega.
 
 ## 14. Conclusão
 

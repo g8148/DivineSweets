@@ -68,6 +68,29 @@ export function useAuth() {
         } as Parameters<typeof authClient.signUp.email>[0]),
       ),
 
+    /**
+     * Atualiza nome e telefone da conta.
+     *
+     * Não há rota própria para isso na API: o Better Auth já expõe
+     * `/update-user`, e `telefone` é campo extra declarado sem `input: false`,
+     * então entra por ali. O `role` **é** `input: false`, de modo que este
+     * mesmo endpoint não serve para alguém se promover a administrador.
+     *
+     * O e-mail fica de fora de propósito: é a identidade de login, e trocá-lo
+     * exigiria verificar o endereço novo — fluxo que este projeto não tem.
+     */
+    atualizarPerfil: async (dados: { nome: string; telefone: string }) => {
+      await exigir(
+        authClient.updateUser({
+          name: dados.nome,
+          telefone: dados.telefone,
+        } as Parameters<typeof authClient.updateUser>[0]),
+      );
+      // `useSession` serve de cache: sem forçar a releitura ignorando o cookie
+      // guardado, a tela continuaria mostrando o nome antigo depois de salvar.
+      await authClient.getSession({ query: { disableCookieCache: true } });
+    },
+
     sair: async () => {
       await authClient.signOut();
       // Sem isto, o próximo login veria em cache os pedidos do usuário anterior
